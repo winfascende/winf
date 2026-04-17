@@ -1,0 +1,197 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile in the Winf OS system",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["Licenciado", "Admin", "Member", "Collaborator"] },
+        "avatar": { "type": "string" },
+        "winfCoins": { "type": "number" },
+        "company": { "type": "string" },
+        "phone": { "type": "string" },
+        "cnpj": { "type": "string" },
+        "businessModel": { "type": "string", "enum": ["STUDIO", "ONLINE", "KIOSK", "CORPORATE"] },
+        "territory": { "type": "string" },
+        "address": {
+          "type": "object",
+          "properties": {
+            "street": { "type": "string" },
+            "city": { "type": "string" },
+            "state": { "type": "string" },
+            "zip": { "type": "string" }
+          }
+        },
+        "w_rank_xp": { "type": "number" },
+        "w_rank_level": { "type": "string" },
+        "collaborator_level": { "type": "string", "enum": ["Operador", "Especialista", "Master"] },
+        "is_active": { "type": "boolean" },
+        "arch_clearance": {
+          "type": "object",
+          "properties": {
+            "invisible": { "type": "boolean" },
+            "blackpro": { "type": "boolean" },
+            "dualreflect": { "type": "boolean" }
+          }
+        },
+        "winf_knowledge": { "type": "number" },
+        "cortex_influence": { "type": "number" },
+        "neural_memory": { "type": "number" },
+        "tactical_assets": { "type": "number" },
+        "uid": { "type": "string", "description": "Firebase Auth UID" }
+      },
+      "required": ["id", "name", "email", "role", "winfCoins", "w_rank_xp", "w_rank_level", "uid"]
+    },
+    "Lead": {
+      "title": "Lead",
+      "description": "A potential customer lead",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "name": { "type": "string" },
+        "contact": { "type": "string" },
+        "source": { "type": "string" },
+        "interest": { "type": "string" },
+        "status": { "type": "string" },
+        "ai_score": { "type": "number" },
+        "dominance_score": { "type": "number" },
+        "psychological_weakness": { "type": "string" },
+        "last_paradox_truth": { "type": "string" },
+        "last_paradox_maneuver": { "type": "string" },
+        "suggested_cell": { "type": "string" },
+        "decay_level": { "type": "number" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "contact", "source", "interest", "status", "ai_score", "dominance_score", "decay_level"]
+    },
+    "StockItem": {
+      "title": "StockItem",
+      "description": "Inventory item for Winf Stock",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "product_id": { "type": "string" },
+        "product_name": { "type": "string" },
+        "total_meters": { "type": "number" },
+        "width": { "type": "number" },
+        "remaining_meters": { "type": "number" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "user_id", "product_id", "product_name", "total_meters", "width", "remaining_meters", "created_at"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial transaction",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "amount": { "type": "number" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "user_id", "type", "amount", "description", "category", "paymentMethod", "date"]
+    },
+    "PartnerTask": {
+      "title": "PartnerTask",
+      "description": "Task for a partner or team member",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "due_date": { "type": "string", "format": "date-time" },
+        "priority": { "type": "string", "enum": ["LOW", "MEDIUM", "HIGH", "CRITICAL"] },
+        "status": { "type": "string", "enum": ["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"] },
+        "category": { "type": "string", "enum": ["SALES", "TECHNICAL", "ADMIN", "MARKETING", "OTHER"] },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "user_id", "title", "priority", "status", "category", "created_at"]
+    },
+    "WarrantyRegistration": {
+      "title": "WarrantyRegistration",
+      "description": "Digital warranty registration",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "customerName": { "type": "string" },
+        "customerEmail": { "type": "string", "format": "email" },
+        "productLine": { "type": "string" },
+        "serialNumber": { "type": "string" },
+        "purchaseDate": { "type": "string", "format": "date-time" },
+        "coverage": { "type": "string" },
+        "status": { "type": "string" },
+        "licenciado_id": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "customerName", "productLine", "serialNumber", "purchaseDate", "status"]
+    },
+    "Quote": {
+      "title": "Quote",
+      "description": "Generated quote for a customer",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "user_id": { "type": "string" },
+        "customerName": { "type": "string" },
+        "vehicleModel": { "type": "string" },
+        "projectType": { "type": "string", "enum": ["Automotive", "Architecture"] },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": { "type": "string" },
+              "description": { "type": "string" },
+              "quantity": { "type": "number" },
+              "unitPrice": { "type": "number" }
+            }
+          }
+        },
+        "totalAmount": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "customerName", "items", "totalAmount", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "User",
+      "description": "Collection of all users (licensees, admins, members)"
+    },
+    "leads": {
+      "schema": "Lead",
+      "description": "Collection of all leads"
+    },
+    "stock": {
+      "schema": "StockItem",
+      "description": "Collection of stock items"
+    },
+    "transactions": {
+      "schema": "Transaction",
+      "description": "Collection of financial transactions"
+    },
+    "tasks": {
+      "schema": "PartnerTask",
+      "description": "Collection of tasks"
+    },
+    "warranties": {
+      "schema": "WarrantyRegistration",
+      "description": "Collection of warranties"
+    },
+    "quotes": {
+      "schema": "Quote",
+      "description": "Collection of quotes"
+    }
+  }
+}

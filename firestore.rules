@@ -1,0 +1,243 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Fields: name (string), email (string), role (string), winfCoins (number), w_rank_xp (number), w_rank_level (string), uid (string)
+    //
+    // Collection: leads
+    // Fields: user_id (string), name (string), contact (string), source (string), interest (string), status (string), ai_score (number), created_at (string)
+    //
+    // Collection: installations
+    // Fields: user_id (string), installer_id (string), client_name (string), product_name (string), city (string), created_at (string)
+    //
+    // Collection: warranties
+    // Fields: licenciado_id (string), customer_name (string), product_line (string), serial_number (string), status (string), created_at (string)
+    //
+    // Collection: agent_logs
+    // Fields: agent (string), action (string), status (string), created_at (string)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin') ||
+        (request.auth.token.email == "marketing.advanced.windowfilm@gmail.com" && request.auth.token.email_verified == true)
+      );
+    }
+
+    function isInstaller() {
+      return isAuthenticated() && (
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Instalador' ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Licenciado'
+        )) ||
+        isAdmin()
+      );
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isRecent(timeStr) {
+      return timeStr is string && 
+             timeStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$") &&
+             (request.time - timestamp(timeStr)).abs() < duration.value(5, 'm');
+    }
+
+    function fieldUnchanged(field) {
+      return !(field in request.resource.data) || 
+             request.resource.data[field] == resource.data[field];
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidUser(data) {
+      return hasRequiredFields(['name', 'email', 'role', 'uid']) &&
+             hasOnlyAllowedFields(['name', 'email', 'role', 'uid', 'avatar', 'winfCoins', 'w_rank_xp', 'w_rank_level', 'arch_clearance', 'winf_knowledge', 'cortex_influence', 'neural_memory', 'tactical_assets', 'id']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             isValidEmail(data.email) &&
+             data.role in ['Licenciado', 'Admin', 'Member', 'Collaborator', 'Instalador'] &&
+             data.uid == request.auth.uid;
+    }
+
+    function isValidLead(data) {
+      return hasRequiredFields(['name', 'contact', 'source', 'interest', 'status']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.contact is string && data.contact.size() > 0 && data.contact.size() < 50 &&
+             (!('user_id' in data) || data.user_id is string);
+    }
+
+    function isValidGeneric(data, required) {
+      return hasRequiredFields(required) &&
+             (!('user_id' in data) || data.user_id == request.auth.uid) &&
+             (!('created_at' in data) || isRecent(data.created_at));
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    // Users Collection
+    match /users/{userId} {
+      // PII Protection: Only owner or admin can read profile
+      allow read: if isOwner(userId) || isAdmin(); 
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if (isOwner(userId) && isValidUser(request.resource.data) && 
+                       request.resource.data.role == resource.data.role &&
+                       request.resource.data.winfCoins == resource.data.winfCoins) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Products Collection
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Installations Collection
+    match /installations/{installationId} {
+      allow read: if true; // Public for certificate verification
+      allow create: if isInstaller() && hasRequiredFields(['client_name', 'product_name', 'user_id']) &&
+                       request.resource.data.user_id == request.auth.uid;
+      allow update: if isAdmin() || (isInstaller() && resource.data.installer_id == request.auth.uid &&
+                                     fieldUnchanged('user_id') && fieldUnchanged('installer_id'));
+      allow delete: if isAdmin();
+    }
+
+    // Warranties Collection
+    match /warranties/{warrantyId} {
+      allow read: if true;
+      allow create: if isInstaller() && hasRequiredFields(['customer_name', 'product_line', 'licenciado_id']);
+      allow update: if isAdmin() || (isInstaller() && resource.data.licenciado_id == request.auth.uid &&
+                                     fieldUnchanged('licenciado_id'));
+      allow delete: if isAdmin();
+    }
+
+    // Leads Collection
+    match /leads/{leadId} {
+      allow read: if isAuthenticated() && (resource.data.user_id == request.auth.uid || resource.data.user_id == 'system-public-inbox' || isAdmin());
+      allow create: if isValidLead(request.resource.data); 
+      allow update: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin()) &&
+                       isValidLead(request.resource.data) && fieldUnchanged('user_id');
+      allow delete: if isAdmin();
+    }
+
+    // Agent Logs
+    match /agent_logs/{logId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Platform Events
+    match /platform_events/{eventId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Documents Master
+    match /documents_master/{docId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Orders and Order Items
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidGeneric(request.resource.data, ['user_id', 'total_amount']);
+      allow update, delete: if isAdmin();
+    }
+
+    match /order_items/{itemId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    // Stock Items
+    match /stock_items/{itemId} {
+      allow read: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidGeneric(request.resource.data, ['user_id', 'product_id']);
+      allow update: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin()) &&
+                       fieldUnchanged('user_id');
+      allow delete: if isAdmin();
+    }
+
+    // Partner Tasks
+    match /partner_tasks/{taskId} {
+      allow read: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidGeneric(request.resource.data, ['user_id', 'title']);
+      allow update: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin()) &&
+                       fieldUnchanged('user_id');
+      allow delete: if isAdmin();
+    }
+
+    // AI Generations
+    match /ai_generations/{genId} {
+      allow read: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidGeneric(request.resource.data, ['user_id', 'tool_used']);
+      allow update, delete: if isAdmin();
+    }
+
+    // Core AI Chats
+    match /core_ai_chats/{chatId} {
+      allow read: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidGeneric(request.resource.data, ['user_id', 'role', 'text']);
+      allow update, delete: if isAdmin();
+    }
+
+    // Coin Ledger
+    match /coin_ledger/{entryId} {
+      allow read: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidGeneric(request.resource.data, ['user_id', 'amount']);
+      allow update, delete: if isAdmin();
+    }
+
+    // Transactions
+    match /transactions/{txId} {
+      allow read: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidGeneric(request.resource.data, ['user_id', 'amount']);
+      allow update, delete: if isAdmin();
+    }
+
+    // Quotes
+    match /quotes/{quoteId} {
+      allow read: if isAuthenticated() && (resource.data.user_id == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidGeneric(request.resource.data, ['user_id', 'customerName']);
+      allow update, delete: if isAdmin();
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

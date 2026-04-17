@@ -1,0 +1,114 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { WINF_CONSTANTS } from '../constants';
+import { Eye, Building2, ArrowLeftRight } from 'lucide-react';
+
+const FilmVisualizer = () => {
+  const [selectedFilm, setSelectedFilm] = useState(WINF_CONSTANTS.portfolio.lines[0].items[0]);
+  const [viewMode, setViewMode] = useState<'inside' | 'outside'>('inside');
+  const [sliderPosition, setSliderPosition] = useState(50);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const films = WINF_CONSTANTS.portfolio.lines.flatMap(line => line.items);
+
+  const getImageUrl = () => {
+    if (viewMode === 'inside') return 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=2070';
+    return 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2070';
+  };
+
+  const handleMove = (clientX: number) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    const percent = Math.max(0, Math.min((x / rect.width) * 100, 100));
+    setSliderPosition(percent);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    handleMove(e.clientX);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    handleMove(e.touches[0].clientX);
+  };
+
+  useEffect(() => {
+    const handleMouseUp = () => setIsDragging(false);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchend', handleMouseUp);
+    return () => {
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchend', handleMouseUp);
+    };
+  }, []);
+
+  return (
+    <div className="p-8 md:p-12 bg-winf-surface border border-winf-border rounded-[40px]">
+      <h2 className="text-3xl font-black uppercase tracking-tighter text-winf-text_primary mb-10">Visualizador de Performance</h2>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="lg:col-span-1 space-y-6">
+          <select 
+            onChange={(e) => setSelectedFilm(films.find(f => f.id === e.target.value) || films[0])}
+            className="w-full bg-winf-background border border-winf-border rounded-xl px-4 py-3 text-sm text-winf-text_primary"
+          >
+            {films.map(film => <option key={film.id} value={film.id}>{film.name}</option>)}
+          </select>
+
+          <div className="flex gap-2 p-1 bg-winf-background rounded-xl border border-winf-border">
+            <button onClick={() => setViewMode('inside')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest ${viewMode === 'inside' ? 'bg-winf-text_primary text-winf-background' : 'text-winf-text_muted'}`}>
+              <Eye size={14} /> Interior
+            </button>
+            <button onClick={() => setViewMode('outside')} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-lg text-[10px] font-bold uppercase tracking-widest ${viewMode === 'outside' ? 'bg-winf-text_primary text-winf-background' : 'text-winf-text_muted'}`}>
+              <Building2 size={14} /> Fachada
+            </button>
+          </div>
+        </div>
+
+        <div 
+          className="lg:col-span-3 relative h-[300px] md:h-[400px] rounded-3xl overflow-hidden border border-winf-border cursor-ew-resize select-none"
+          ref={containerRef}
+          onMouseDown={(e) => { setIsDragging(true); handleMove(e.clientX); }}
+          onMouseMove={handleMouseMove}
+          onTouchStart={(e) => { setIsDragging(true); handleMove(e.touches[0].clientX); }}
+          onTouchMove={handleTouchMove}
+        >
+          {/* Base Image (Sem Proteção) */}
+          <img src={getImageUrl()} alt="Sem Proteção" className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+          
+          {/* Overlay Image (Com WINF) */}
+          <div 
+            className="absolute inset-0 overflow-hidden pointer-events-none"
+            style={{ width: `${sliderPosition}%` }}
+          >
+            <img src={getImageUrl()} alt="Com Proteção" className="absolute inset-0 w-[100vw] max-w-none h-full object-cover" style={{ width: containerRef.current?.offsetWidth || '100%' }} />
+            <div className="absolute inset-0 bg-winf-primary/30 mix-blend-multiply" />
+          </div>
+          
+          {/* Slider Handle */}
+          <div 
+            className="absolute top-0 bottom-0 w-1 bg-winf-primary cursor-ew-resize flex items-center justify-center"
+            style={{ left: `calc(${sliderPosition}% - 2px)` }}
+          >
+            <div className="w-8 h-8 bg-winf-primary rounded-full flex items-center justify-center shadow-lg transform -translate-x-1/2">
+              <ArrowLeftRight size={16} className="text-winf-background" />
+            </div>
+          </div>
+
+          {/* Labels */}
+          <div className="absolute bottom-6 left-6 bg-winf-background/80 backdrop-blur-md px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest text-winf-text_primary pointer-events-none">
+            {selectedFilm.name}
+          </div>
+          <div className="absolute bottom-6 right-6 bg-winf-background/80 backdrop-blur-md px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest text-winf-text_primary pointer-events-none">
+            Vidro Comum
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default FilmVisualizer;

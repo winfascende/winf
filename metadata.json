@@ -1,0 +1,9 @@
+{
+  "name": "Winf site oficial para subir ",
+  "description": "O Ecossistema Digital Winf™: Uma plataforma premium de proteção molecular invisível para superfícies. Apresenta branding de luxo, módulos de IA (NeuroMesh), gamificação (W-Rank, WinfCoin), funil de vendas, gestão de garantia, e landing pages otimizadas para parceiros e investidores, operando em mercados automotivos e arquitetônicos de alta performance.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ],
+  "majorCapabilities": []
+}
