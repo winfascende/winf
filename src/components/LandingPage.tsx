@@ -227,50 +227,43 @@ const MODELS_DATA = [
   },
   {
     id: 'kiosk',
-    title: 'KIOSK RETAIL',
-    subtitle: 'RETAIL MACHINE',
+    title: 'KIOSK ARCHITECTURE',
+    subtitle: 'RETAIL SALES ENGINE',
     price: 120000,
-    color: 'text-white',
-    border: 'border-white/20',
-    bg: 'bg-white/5',
-    image: 'https://images.unsplash.com/photo-1534452286302-2f5631f5a13a?auto=format&fit=crop&q=80&w=1000',
-    description: 'A máquina de imprimir dinheiro em Shoppings. Venda de gadgets (películas de celular) com altíssima margem + Captação de leads para Auto/Arq.',
+    status: 'OPERACIONAL',
+    demand: 'Alta Visibilidade',
+    territory: 'Shopping Classe A',
+    description: 'Ponto ativo de alta densidade. Função: Captação massiva de leads, demonstração VR e abertura de projetos. Fatura através da venda consultiva assistida, conectando o cliente aos Aplicadores Elite.',
     payback: '12 a 18 meses',
     deliverables: [
-        'Projeto Modular Shopping',
-        'Hardware de Varejo Winf™',
-        'Estoque de Gadgets Premium',
-        'Software Kiosk Mode',
-        'Treinamento de Atendimento',
-        'Marketing de Fluxo'
+        'Totem Imersivo (VR + Teste Térmico)',
+        'Integração direta com Aplicadores Elite',
+        'WINF OS: CRM de Gestão de Leads',
+        'Fluxo de vendas Turnkey'
     ],
     scenarios: [
-        { name: 'Fluxo Baixo', revenue: 45000 },
-        { name: 'Fluxo Médio', revenue: 85000 },
-        { name: 'Fluxo Alto', revenue: 150000 }
+        { name: 'Fluxo Moderado', revenue: 45000 },
+        { name: 'Fluxo Alto', revenue: 85000 },
+        { name: 'Elite Partner', revenue: 150000 }
     ],
-    investment_breakdown: [
-        'Fabricação do Kiosk',
-        'Hardware e Software',
-        'Estoque Inicial Gadgets',
-        'Taxa de Franquia'
-    ],
-    operational_steps: [
-        '1. Seleção do Ponto.',
-        '2. Montagem do Kiosk.',
-        '3. Treinamento de Staff.',
-        '4. Inauguração.'
-    ],
-    financials: {
-        scenario: 'Varejo de Shopping',
-        monthly_potential: 'R$ 45.000 a R$ 150.000',
-        profit_margin: '40%',
-        note: 'Lucro composto: Venda direta + Comissão de Leads.'
-    },
-    demand: 'Explosiva',
-    territory: 'Shopping Centers',
-    status: 'EM BREVE',
-    availabilityNote: 'Fase final de homologação de hardware.'
+    availabilityNote: 'Oportunidade turnkey para licenciados Advanced.'
+  },
+  {
+    id: 'select_partner_technical',
+    title: 'SELECT PARTNER',
+    subtitle: 'TECHNICAL POWERHOUSE',
+    price: 45000,
+    status: 'TÉCNICO',
+    demand: 'Excelência de Aplicação',
+    territory: 'Regional',
+    description: 'O braço de execução de elite. Especialistas em aplicação master. Monetizam diretamente pela prestação de serviço técnico de alta precisão (R$ 30-40/m²) para Kiosks e Advanced.',
+    payback: '4 a 8 meses',
+    deliverables: [
+        'Certificação de Aplicação WINF',
+        'Execução técnica p/ rede (Kiosk/Advanced)',
+        'Auditoria de Qualidade',
+        'Faturamento por serviços técnicos (m²)'
+    ]
   },
   {
     id: 'studio',
@@ -334,9 +327,21 @@ const ModelDetailModal: React.FC<{ model: any, onClose: () => void, onProceed: (
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-[#050505]/98 backdrop-blur-3xl overflow-y-auto"
+            onClick={onClose}
+            className="fixed inset-0 z-[100] flex items-start justify-center p-0 md:p-8 bg-[#050505]/98 backdrop-blur-3xl overflow-y-auto pt-0 md:pt-12 lg:pt-20"
         >
-            <div className="max-w-6xl w-full bg-[#0a0a0a] border border-white/5 rounded-[40px] overflow-hidden relative shadow-[0_0_100px_rgba(0,0,0,0.8)]">
+            <div 
+                onClick={(e) => e.stopPropagation()}
+                className="max-w-6xl w-full bg-[#0a0a0a] border-0 md:border md:border-white/5 rounded-0 md:rounded-[40px] overflow-hidden relative shadow-[0_0_100px_rgba(0,0,0,0.8)] min-h-screen md:min-h-0 mb-0 md:mb-20"
+            >
+                {/* Enhanced Close Button */}
+                <button 
+                    onClick={onClose}
+                    className="absolute top-6 right-6 md:top-10 md:right-10 z-50 w-10 h-10 md:w-14 md:h-14 bg-white text-black rounded-full flex items-center justify-center text-black transition-all hover:scale-110 active:scale-95 shadow-[0_0_30px_rgba(255,255,255,0.3)]"
+                >
+                    <X size={24} className="md:w-7 md:h-7" />
+                </button>
+
                 {/* Subtle Watermark */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none opacity-[0.015] select-none z-0">
                     <div className="text-[12rem] font-black text-white whitespace-nowrap tracking-tighter">
@@ -362,14 +367,14 @@ const ModelDetailModal: React.FC<{ model: any, onClose: () => void, onProceed: (
                     <motion.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="flex flex-col lg:flex-row min-h-[80vh]"
+                        className="flex flex-col md:flex-row min-h-[80vh]"
                     >
                         {/* Left: Visual & Info */}
                         <motion.div 
                             initial={{ x: -20, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             transition={{ delay: 0.2 }}
-                            className="lg:w-1/2 relative bg-[#0d0d0d] p-8 md:p-16 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-white/5"
+                            className="md:w-1/2 relative bg-[#0d0d0d] p-6 md:p-16 flex flex-col justify-between border-b md:border-b-0 md:border-r border-white/5"
                         >
                             <div className="absolute inset-0 opacity-20 grayscale pointer-events-none">
                                 <img src={model.image} alt="" className="w-full h-full object-cover" />
@@ -380,22 +385,22 @@ const ModelDetailModal: React.FC<{ model: any, onClose: () => void, onProceed: (
                                 <button onClick={onClose} className="mb-8 md:mb-12 flex items-center gap-3 text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/40 hover:text-white transition-colors group">
                                     <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Voltar ao Radar
                                 </button>
-                                <h2 className="text-4xl md:text-7xl font-bold text-white mb-4 uppercase tracking-tighter leading-none">
+                                <h2 className="text-3xl sm:text-4xl md:text-7xl font-bold text-white mb-6 uppercase tracking-tighter leading-tight md:leading-none">
                                     {model.title}
                                 </h2>
-                                <p className="text-white/40 text-base md:text-lg font-light leading-relaxed mb-8 md:mb-10 max-w-md">
+                                <p className="text-white/40 text-sm md:text-lg font-light leading-relaxed mb-10 md:mb-12 max-w-md">
                                     {model.description}
                                 </p>
                                 
                                 <div className="space-y-4 md:space-y-6">
-                                    <div className="flex items-center gap-4 md:gap-6">
-                                        <div className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/20 w-20 md:w-24 shrink-0">Investimento</div>
-                                        <div className="h-px flex-1 bg-white/5"></div>
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 md:gap-6">
+                                        <div className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/20 w-auto sm:w-20 md:w-24 shrink-0">Investimento</div>
+                                        <div className="hidden sm:block h-px flex-1 bg-white/5"></div>
                                         <div className="text-xl md:text-2xl font-black text-white tracking-tighter">R$ {model.price.toLocaleString()}</div>
                                     </div>
-                                    <div className="flex items-center gap-4 md:gap-6">
-                                        <div className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/20 w-20 md:w-24 shrink-0">Payback Est.</div>
-                                        <div className="h-px flex-1 bg-white/5"></div>
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 md:gap-6">
+                                        <div className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-white/20 w-auto sm:w-20 md:w-24 shrink-0">Payback Est.</div>
+                                        <div className="hidden sm:block h-px flex-1 bg-white/5"></div>
                                         <div className="text-xl md:text-2xl font-black text-white tracking-tighter">{model.payback}</div>
                                     </div>
                                     {model.availabilityNote && (
@@ -404,9 +409,9 @@ const ModelDetailModal: React.FC<{ model: any, onClose: () => void, onProceed: (
                                             animate={{ opacity: 1, y: 0 }}
                                             className="p-4 rounded-2xl bg-winf-primary/5 border border-winf-primary/20"
                                         >
-                                            <div className="flex items-center gap-3 text-winf-primary">
-                                                <div className="w-1.5 h-1.5 bg-winf-primary rounded-full animate-pulse"></div>
-                                                <span className="text-[10px] font-black uppercase tracking-widest">{model.availabilityNote}</span>
+                                            <div className="flex items-start gap-3 text-winf-primary">
+                                                <div className="w-1.5 h-1.5 bg-winf-primary rounded-full animate-pulse mt-1.5 shrink-0"></div>
+                                                <span className="text-[10px] font-black uppercase tracking-widest leading-relaxed">{model.availabilityNote}</span>
                                             </div>
                                         </motion.div>
                                     )}
@@ -436,7 +441,7 @@ const ModelDetailModal: React.FC<{ model: any, onClose: () => void, onProceed: (
                             initial={{ x: 20, opacity: 0 }}
                             animate={{ x: 0, opacity: 1 }}
                             transition={{ delay: 0.3 }}
-                            className="lg:w-1/2 p-8 md:p-16 flex flex-col"
+                            className="md:w-1/2 p-6 md:p-16 flex flex-col"
                         >
                             <div className="flex items-center justify-between mb-8 md:mb-12">
                                 <div className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] text-white/20">Projeção de Performance</div>
@@ -493,6 +498,7 @@ const ModelDetailModal: React.FC<{ model: any, onClose: () => void, onProceed: (
 };
 
 const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onNavigateToMarketingPage }) => {
+  const { loginAsPrototype } = useWinf();
   const [selectedModel, setSelectedModel] = useState<any>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -554,81 +560,147 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onNavigateToMarketin
       </div>
 
       {/* Detail Modal */}
-      {selectedModel && (
-          <ModelDetailModal 
-            model={selectedModel} 
-            onClose={() => setSelectedModel(null)} 
-            onProceed={handleProceed}
-          />
-      )}
+      <AnimatePresence>
+        {selectedModel && (
+            <ModelDetailModal 
+              model={selectedModel} 
+              onClose={() => setSelectedModel(null)} 
+              onProceed={handleProceed}
+            />
+        )}
+      </AnimatePresence>
 
       {/* Film Grain Overlay */}
       <div className="fixed inset-0 pointer-events-none z-[100] opacity-[0.03] mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
 
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-[80] border-b border-winf-border bg-winf-background/80 backdrop-blur-2xl h-16 md:h-24 flex items-center">
-        <div className="max-w-[1500px] mx-auto px-4 md:px-10 w-full flex justify-between items-center">
-          <div className="flex items-center gap-2 md:gap-3 group cursor-pointer" onClick={() => { window.scrollTo(0,0); setIsMenuOpen(false); }}>
-              <div className="relative">
-                <span className="font-black tracking-tighter text-lg md:text-2xl uppercase relative z-10">Winf™ PARTNERS</span>
-                <motion.div 
-                  className="absolute -inset-1 bg-winf-primary/10 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                />
-              </div>
-              <div className="hidden sm:flex items-center gap-2 px-2 py-0.5 rounded border border-winf-border bg-winf-surface">
-                <div className="w-1 h-1 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-[7px] font-black text-winf-text_muted uppercase tracking-widest">BOARD_ACCESS</span>
-              </div>
-          </div>
+      {/* Navigation - System Command bar */}
+      <nav className="fixed top-6 left-0 right-0 z-[80] transition-all duration-500 flex justify-center px-4">
+        <div className={`relative w-full max-w-[1400px] border border-white/5 rounded-[32px] overflow-hidden transition-all duration-700 ${isMenuOpen ? 'bg-[#050505] h-[85vh]' : 'bg-black/40 backdrop-blur-2xl h-16 md:h-20 shadow-[0_20px_40px_rgba(0,0,0,0.3)]'}`}>
+          <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none"></div>
           
-          <div className="hidden lg:flex items-center gap-12 text-[9px] font-bold uppercase tracking-[0.4em] text-winf-text_muted">
-            <button onClick={() => onNavigateToMarketingPage(ViewState.INSTITUTIONAL_SITE)} className="hover:text-winf-text_primary transition-all hover:tracking-[0.6em]">A Marca</button>
-            <button onClick={() => onNavigateToMarketingPage(ViewState.ABOUT_US)} className="hover:text-winf-text_primary transition-all hover:tracking-[0.6em]">Sobre Nós</button>
-            <button onClick={() => onNavigateToMarketingPage(ViewState.PRODUCTS_CATALOG)} className="hover:text-winf-text_primary transition-all hover:tracking-[0.6em]">Catálogo</button>
-            <a href="#models" className="hover:text-winf-text_primary transition-all hover:tracking-[0.6em]">Licenciamento</a>
-            <button onClick={() => onNavigateToMarketingPage(ViewState.LANDING_KIOSK)} className="hover:text-winf-text_primary transition-all hover:tracking-[0.6em]">Kiosks</button>
-            <button onClick={() => onNavigateToMarketingPage(ViewState.LANDING_STUDIO)} className="hover:text-winf-text_primary transition-all hover:tracking-[0.6em]">Franquias</button>
-            <a href="#social" className="hover:text-winf-text_primary transition-all hover:tracking-[0.6em]">Galeria</a>
+          <div className="relative h-16 md:h-20 px-4 md:px-10 w-full flex justify-between items-center z-10">
+            <div className="flex items-center gap-2 md:gap-4 group cursor-pointer shrink-0" onClick={() => { window.scrollTo(0,0); setIsMenuOpen(false); }}>
+                <div className="flex items-center gap-2">
+                  <span className="font-black tracking-tighter text-base md:text-xl uppercase italic">WINF™ PARTNERS</span>
+                </div>
+            </div>
+
+            <div className="flex items-center gap-2 md:gap-4 shrink-0">
+              <button 
+                onClick={() => onNavigateToMarketingPage(ViewState.PUBLIC_CONSULTANCY)} 
+                className="hidden xl:flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 text-[10px] font-black uppercase tracking-widest text-zinc-300 hover:text-white hover:border-white/20 transition-all"
+              >
+                <Smartphone size={14} /> Visão do Cliente
+              </button>
+              
+              <div className="h-6 w-px bg-white/5 hidden sm:block"></div>
+
+              <button 
+                onClick={loginAsPrototype} 
+                className="hidden sm:flex bg-winf-primary text-black px-4 md:px-8 py-2 md:py-2.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] hover:bg-winf-primary/80 transition-all active:scale-95 items-center gap-1.5 md:gap-2 whitespace-nowrap shadow-[0_0_20px_rgba(255,255,255,0.2)]"
+              >
+                <Cpu size={12} /> Prototype Access
+              </button>
+              
+              <button 
+                onClick={onEnter} 
+                className="hidden sm:flex bg-white/5 border border-white/10 text-white px-4 md:px-8 py-2 md:py-2.5 rounded-full text-[8px] md:text-[9px] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] hover:bg-white/10 transition-all active:scale-95 items-center gap-1.5 md:gap-2 whitespace-nowrap"
+              >
+                <Lock size={12} /> Board Access
+              </button>
+              
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="w-9 h-9 md:w-10 md:h-10 flex flex-col items-center justify-center gap-1 md:gap-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
+              >
+                <motion.div 
+                  animate={isMenuOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
+                  className="w-4 md:w-5 h-0.5 bg-white origin-center transition-all"
+                />
+                <motion.div 
+                  animate={isMenuOpen ? { opacity: 0 } : { opacity: 1 }}
+                  className="w-4 md:w-5 h-0.5 bg-white transition-all"
+                />
+                <motion.div 
+                  animate={isMenuOpen ? { rotate: -45, y: -6 } : { rotate: 0, y: 0 }}
+                  className="w-4 md:w-5 h-0.5 bg-white origin-center transition-all"
+                />
+              </button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 md:gap-4">
-            <button onClick={() => onNavigateToMarketingPage(ViewState.PUBLIC_CONSULTANCY)} className="hidden md:block border border-winf-border text-winf-text_muted px-4 py-2.5 rounded-full text-[8px] font-bold uppercase tracking-[0.2em] hover:bg-winf-surface hover:text-winf-text_primary transition-all">
-              Visão do Cliente
-            </button>
-            <button onClick={onEnter} className="bg-winf-primary text-winf-background px-4 md:px-8 py-2 md:py-3 rounded-full text-[8px] md:text-[9px] font-bold uppercase tracking-[0.4em] hover:opacity-90 hover:scale-105 transition-all shadow-[0_0_20px_rgba(var(--winf-primary-rgb),0.2)]">
-              Login
-            </button>
-            <button 
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 text-white/60 hover:text-white transition-colors"
-            >
-              {isMenuOpen ? <X size={24} /> : <GalleryVerticalEnd size={24} className="rotate-90" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu Overlay */}
-        <div className={`fixed inset-0 z-[70] bg-[#050505] transition-all duration-500 lg:hidden flex flex-col ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-          <div className="flex-1 overflow-y-auto pt-24 pb-10 px-6 flex flex-col">
-            <div className="flex flex-col items-start gap-6 text-xl font-black uppercase tracking-[0.2em] text-white/80 w-full">
-              <button onClick={() => { onNavigateToMarketingPage(ViewState.INSTITUTIONAL_SITE); setIsMenuOpen(false); }} className="hover:text-white transition-colors w-full text-left py-4 border-b border-white/10">A MARCA</button>
-              <button onClick={() => { onNavigateToMarketingPage(ViewState.ABOUT_US); setIsMenuOpen(false); }} className="hover:text-white transition-colors w-full text-left py-4 border-b border-white/10">SOBRE NÓS</button>
-              <button onClick={() => { onNavigateToMarketingPage(ViewState.PRODUCTS_CATALOG); setIsMenuOpen(false); }} className="hover:text-white transition-colors w-full text-left py-4 border-b border-white/10">CATÁLOGO</button>
-              <a href="#models" onClick={() => setIsMenuOpen(false)} className="hover:text-white transition-colors w-full text-left py-4 border-b border-white/10">LICENCIAMENTO</a>
-              <button onClick={() => { onNavigateToMarketingPage(ViewState.LANDING_KIOSK); setIsMenuOpen(false); }} className="hover:text-white transition-colors w-full text-left py-4 border-b border-white/10">KIOSKS</button>
-              <button onClick={() => { onNavigateToMarketingPage(ViewState.LANDING_STUDIO); setIsMenuOpen(false); }} className="hover:text-white transition-colors w-full text-left py-4 border-b border-white/10">FRANQUIAS</button>
-              <a href="#social" onClick={() => setIsMenuOpen(false)} className="hover:text-white transition-colors w-full text-left py-4 border-b border-white/10">GALERIA</a>
-            </div>
-            
-            <div className="mt-auto pt-10 flex flex-col gap-4">
-              <button onClick={() => { onNavigateToMarketingPage(ViewState.PUBLIC_CONSULTANCY); setIsMenuOpen(false); }} className="w-full border border-winf-border text-winf-text_muted px-6 py-5 rounded-2xl text-sm font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-winf-surface transition-all">
-                Visão do Cliente
-              </button>
-              <button onClick={() => { onEnter(); setIsMenuOpen(false); }} className="w-full bg-winf-primary text-black px-6 py-5 rounded-2xl text-sm font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(var(--winf-primary-rgb),0.3)]">
-                <Lock size={18} /> Portal do Parceiro
-              </button>
-            </div>
-          </div>
+          {/* Mobile Menu Content - Advanced Layout */}
+          <AnimatePresence>
+            {isMenuOpen && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 pt-20 flex flex-col p-8 bg-black"
+              >
+                <div className="flex-1 grid grid-cols-1 gap-3 overflow-y-auto no-scrollbar pr-1">
+                  {[
+                    { name: 'A Marca', view: ViewState.INSTITUTIONAL_SITE, desc: 'Engenharia de Alta Performance' },
+                    { name: 'Sobre Nós', view: ViewState.ABOUT_US, desc: 'Squad Winf' },
+                    { name: 'Catálogo', view: ViewState.PRODUCTS_CATALOG, desc: 'Lineup Select™' },
+                    { name: 'Licenciamento', href: '#models', desc: 'Radar de Investimento' },
+                    { name: 'Kiosks', view: ViewState.LANDING_KIOSK, desc: 'Retail Machine' },
+                    { name: 'Franquias', view: ViewState.LANDING_STUDIO, desc: 'Studio Master' },
+                    { name: 'AEROCORE', view: ViewState.LANDING_AEROCORE, desc: 'High Tech' },
+                    { name: 'Galeria', href: '#social', desc: 'Dominância Social' }
+                  ].map((item, idx) => (
+                    <motion.button
+                      key={idx}
+                      initial={{ x: -20, opacity: 0 }}
+                      animate={{ x: 0, opacity: 1 }}
+                      transition={{ delay: idx * 0.05 }}
+                      onClick={() => {
+                        if (item.view) onNavigateToMarketingPage(item.view);
+                        if (item.href) window.location.href = item.href;
+                        setIsMenuOpen(false);
+                      }}
+                      className="flex items-center justify-between p-4 md:p-6 rounded-[24px] bg-white/[0.03] border border-white/5 hover:bg-white/5 group"
+                    >
+                      <div className="text-left w-full overflow-hidden">
+                        <div className="text-base md:text-lg font-black uppercase tracking-widest text-white group-hover:text-winf-primary transition-colors truncate">{item.name}</div>
+                        <div className="text-[8px] md:text-[9px] font-bold text-zinc-600 uppercase tracking-widest mt-0.5 truncate">{item.desc}</div>
+                      </div>
+                      <ArrowRight size={18} className="text-zinc-800 group-hover:text-white transition-all shrink-0 ml-2" />
+                    </motion.button>
+                  ))}
+                  
+                  <motion.button
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    onClick={() => { onNavigateToMarketingPage(ViewState.PUBLIC_CONSULTANCY); setIsMenuOpen(false); }}
+                    className="flex items-center gap-3 p-4 md:p-6 rounded-[24px] bg-winf-primary/10 border border-winf-primary/20"
+                  >
+                    <Smartphone className="text-winf-primary shrink-0" size={20} />
+                    <div className="text-left overflow-hidden">
+                      <div className="text-xs md:text-sm font-black text-winf-primary uppercase tracking-widest">Visão do Cliente</div>
+                      <div className="text-[8px] md:text-[9px] font-bold text-winf-primary/60 uppercase tracking-widest truncate">Portal de suporte e garantias</div>
+                    </div>
+                  </motion.button>
+                </div>
+                
+                <div className="mt-8 pt-8 border-t border-white/5 flex flex-col gap-3">
+                  <button 
+                    onClick={() => { loginAsPrototype(); setIsMenuOpen(false); }}
+                    className="w-full py-5 bg-winf-primary text-black rounded-3xl font-black uppercase tracking-[0.3em] text-xs shadow-[0_20px_40px_rgba(255,255,255,0.1)]"
+                  >
+                    Acessar Ferramentas (Dev)
+                  </button>
+                  <button 
+                    onClick={() => { onEnter(); setIsMenuOpen(false); }}
+                    className="w-full py-5 bg-white/5 border border-white/10 text-white rounded-3xl font-black uppercase tracking-[0.3em] text-xs"
+                  >
+                    Portal do Parceiro Elite
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </nav>
 
@@ -669,7 +741,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onNavigateToMarketin
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-3 px-6 py-2 rounded-full border border-white/5 bg-white/[0.02] backdrop-blur-xl text-white/30 text-[8px] md:text-[9px] font-black uppercase tracking-[0.4em] md:tracking-[0.6em] mb-8 md:mb-12"
+            className="inline-flex items-center gap-3 px-6 py-2 rounded-full border border-white/10 bg-white/[0.03] backdrop-blur-xl text-white/50 text-[9px] md:text-[10px] font-black uppercase tracking-[0.4em] md:tracking-[0.6em] mb-8 md:mb-12"
           >
             <span>NÚCLEO ESTRATÉGICO</span>
           </motion.div>
@@ -680,11 +752,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onNavigateToMarketin
             transition={{ delay: 0.1, duration: 0.8 }}
             className="relative mb-8 md:mb-10"
           >
-            <h1 className="text-4xl sm:text-6xl md:text-[9rem] font-black tracking-tighter leading-[0.85] uppercase">
-              WINF <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-b from-white to-white/40">
-                PARTNERS
-              </span>
+            <h1 className="text-4xl sm:text-6xl md:text-[7rem] lg:text-[8rem] font-black tracking-tighter leading-[0.85] uppercase text-white">
+              WINF™ PARTNERS
             </h1>
           </motion.div>
           
@@ -694,7 +763,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onNavigateToMarketin
             transition={{ delay: 0.3, duration: 1 }}
             className="mb-12 md:mb-16 relative"
           >
-            <h2 className="text-base md:text-2xl font-light tracking-[0.2em] md:tracking-[0.4em] text-white/60 uppercase max-w-4xl mx-auto leading-relaxed">
+            <h2 className="text-base md:text-2xl font-light tracking-[0.2em] md:tracking-[0.4em] text-white/80 uppercase max-w-4xl mx-auto leading-relaxed">
               <span className="font-bold text-white">Proteção Molecular.</span> Do Digital ao Massivo.
             </h2>
           </motion.div>
@@ -1266,7 +1335,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onNavigateToMarketin
           >
             <div className="inline-flex items-center gap-4 px-6 py-2 rounded-full border border-white/5 bg-white/[0.02] backdrop-blur-xl">
               <div className="w-1.5 h-1.5 bg-winf-primary rounded-full animate-pulse"></div>
-              <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.5em]">ORIGEM TECNOLÓGICA // DARK_FACTORY_PROTOCOL</span>
+              <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.5em]">ORIGEM TECNOLÓGICA // MANUFATURA_AVANÇADA</span>
             </div>
             
             <h2 className="text-4xl md:text-7xl font-black text-white uppercase tracking-tighter leading-[0.9]">
@@ -1314,7 +1383,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onNavigateToMarketin
                   </div>
                   <ul className="space-y-3">
                     {[
-                      { label: "PROTOCOLO_DARK", value: "VERIFIED" },
+                      { label: "QUALIDADE_MÁXIMA", value: "VERIFIED" },
                       { label: "ISO_MOLECULAR", value: "9001:2026" },
                       { label: "LAB_CERTIFIED", value: "SANTOS-ALPHA" }
                     ].map((spec, i) => (
@@ -1385,6 +1454,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onEnter, onNavigateToMarketin
                     <button onClick={() => onNavigateToMarketingPage(ViewState.LANDING_LICENCIAMENTO)} className="hover:text-white transition-all hover:tracking-[0.6em]">Licenciamentos</button>
                     <button onClick={() => onNavigateToMarketingPage(ViewState.LANDING_KIOSK)} className="hover:text-white transition-all hover:tracking-[0.6em]">Kiosks</button>
                     <button onClick={() => onNavigateToMarketingPage(ViewState.LANDING_STUDIO)} className="hover:text-white transition-all hover:tracking-[0.6em]">Franquias</button>
+                    <button onClick={() => onNavigateToMarketingPage(ViewState.LANDING_AEROCORE)} className="hover:text-white transition-all hover:tracking-[0.6em]">Aerocore</button>
                 </div>
 
                 <div className="flex flex-col items-center md:items-end gap-4">

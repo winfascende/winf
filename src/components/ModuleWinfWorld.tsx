@@ -16,17 +16,17 @@ import {
 import { motion } from 'framer-motion';
 
 const CITIES = [
-  { id: 'sp', name: 'São Paulo', temp: 32, condition: 'sun', trend: 'Alta Radiação UV', active: true },
-  { id: 'rj', name: 'Rio de Janeiro', temp: 36, condition: 'sun', trend: 'Onda de Calor', active: true },
-  { id: 'ctba', name: 'Curitiba', temp: 18, condition: 'rain', trend: 'Alta Umidade', active: false },
-  { id: 'bsb', name: 'Brasília', temp: 28, condition: 'sun', trend: 'Clima Seco', active: true },
+  { id: 'santos', name: 'Santos (Sede)', temp: 31, condition: 'sun', trend: 'Alta Radiação UV', active: true },
+  { id: 'pg', name: 'Praia Grande', temp: 33, condition: 'sun', trend: 'Umidade Costeira', active: true },
+  { id: 'sorocaba', name: 'Sorocaba', temp: 29, condition: 'sun', trend: 'Clima Seco Interior', active: true },
+  { id: 'cg', name: 'Campina Grande', temp: 26, condition: 'sun', trend: 'Ventos Alísios', active: true },
 ];
 
 const SPECIALISTS = [
-  { id: 'sales', name: 'WINF Sales Agent', role: 'Vendas & CRM', status: 'Processando 12 leads', icon: Bot },
-  { id: 'marketing', name: 'WINF Content Agent', role: 'Marketing Localizado', status: 'Gerando 4 campanhas (Calor)', icon: TrendingUp },
-  { id: 'stock', name: 'WINF Logistics Agent', role: 'Abastecimento', status: 'Alertando 2 faltas de estoque', icon: Database },
-  { id: 'finance', name: 'WINF Financial Agent', role: 'Cobrança', status: 'Monitorando Inadimplência', icon: Activity },
+  { id: 'sales', name: 'WINF Sales Agent', role: 'Vendas & CRM', status: 'Processando 48 leads regionais', icon: Bot },
+  { id: 'marketing', name: 'WINF Content Agent', role: 'Marketing Localizado', status: 'Otimizando OnePages por Cidade', icon: TrendingUp },
+  { id: 'stock', name: 'WINF Logistics Agent', role: 'Abastecimento Advanced', status: 'Monitorando Consumo de Bobinas', icon: Database },
+  { id: 'finance', name: 'WINF Financial Agent', role: 'Faturamento de Unidades', status: 'Calculando Royalties & Repasses', icon: Activity },
 ];
 
 const ModuleWinfWorld: React.FC = () => {
@@ -46,17 +46,17 @@ const ModuleWinfWorld: React.FC = () => {
         <div>
           <h1 className="text-3xl font-black tracking-tighter uppercase mb-2 flex items-center gap-3">
             <Globe2 className="text-winf-primary" size={32} />
-            WINF™ <span className="text-winf-primary">WORLD</span>
+            WINF™ <span className="text-winf-primary">ADVANCED WORLD</span>
           </h1>
           <p className="text-gray-500 text-xs font-mono uppercase tracking-widest">
-            Organismo Vivo & Orquestração Global
+            Infraestrutura de Expansão Territorial AI-Powered
           </p>
         </div>
         
         <div className="flex items-center gap-4">
           <div className="px-4 py-2 bg-[#005c4b]/20 border border-[#00a884]/30 rounded-lg flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full bg-[#00a884] ${pulseLine ? 'scale-150 opacity-50' : 'scale-100 opacity-100'} transition-all duration-500`}></div>
-            <span className="text-xs font-bold text-[#00a884] tracking-widest uppercase">The Governor Online</span>
+            <span className="text-xs font-bold text-[#00a884] tracking-widest uppercase">Ecosystem Online</span>
           </div>
         </div>
       </div>
@@ -82,19 +82,19 @@ const ModuleWinfWorld: React.FC = () => {
                 </div>
                 <div>
                   <span className="text-[10px] font-black uppercase tracking-widest text-winf-primary">Camada 4</span>
-                  <h2 className="text-2xl font-black text-white uppercase">The Governor</h2>
+                  <h2 className="text-2xl font-black text-white uppercase">The Governor AI™</h2>
                 </div>
               </div>
               <p className="text-sm text-gray-400 max-w-xl leading-relaxed mb-6">
-                Cérebro central baseado em Claude AI. Observa o ecossistema WINF globalmente. 
-                Se uma campanha converte muito no Rio de Janeiro devido ao calor, ele instrui o Agente de Marketing a replicar para outras regiões ensolaradas automaticamente.
+                Orquestrador central do Plano Advanced. Monitora as 4 unidades ativas (Santos, PG, Sorocaba e Campina Grande). 
+                Analisa qual praça está performando melhor e redireciona verba de marketing em tempo real para maximizar o ROI global do licenciado.
               </p>
               
               <div className="flex items-center gap-4 bg-black/50 p-4 rounded-xl border border-white/5">
                 <Network className="text-amber-400" size={20} />
                 <div className="flex-1">
-                  <p className="text-[10px] font-mono text-gray-500">ÚLTIMA DECISÃO GLOBAL</p>
-                  <p className="text-xs text-white">"Onda de calor detectada no sudeste. Instruindo Agentes Locais de SP e RJ a dispararem campanha de Película Nano Cerâmica TSER alto via WhatsApp Hub."</p>
+                  <p className="text-[10px] font-mono text-gray-500">ESTRATÉGIA ADVANCED ATUAL</p>
+                  <p className="text-xs text-white">"Sorocaba apresenta 22% mais conversão em OnePages hoje. Priorizando distribuição de leads para Unidade Sorocaba nas próximas 6 horas."</p>
                 </div>
                 <span className="text-[10px] text-gray-600">Agora mesmo</span>
               </div>

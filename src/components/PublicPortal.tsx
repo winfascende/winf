@@ -61,21 +61,32 @@ export const PublicPortal: React.FC<PublicPortalProps> = ({ onBack, onNavigateTo
 
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-winf-primary/20">
-      {/* Header */}
-      <nav className="border-b border-white/5 bg-black/50 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
-          <div className="flex items-center gap-4 md:gap-6">
-            <button onClick={onBack} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-              <ChevronLeft size={20} className="md:w-6 md:h-6" />
-            </button>
-            <div className="flex items-center gap-2">
-              <span className="font-black tracking-tighter text-lg md:text-xl uppercase italic">WINF™</span>
-              <span className="text-[8px] md:text-[10px] font-bold text-gray-500 uppercase tracking-widest border-l border-white/20 pl-2 md:pl-3">Portal do Cliente</span>
+      {/* Header - System Command Bar */}
+      <nav className="fixed top-6 left-1/2 -translate-x-1/2 w-[92%] max-w-[1400px] z-[80] transition-all duration-500">
+        <div className="relative w-full border border-white/5 rounded-[32px] bg-black/40 backdrop-blur-2xl h-16 md:h-20 flex items-center px-6 md:px-10 shadow-[0_20px_40px_rgba(0,0,0,0.3)]">
+          <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none"></div>
+          
+          <div className="relative w-full flex justify-between items-center z-10">
+            <div className="flex items-center gap-4 md:gap-8">
+              <button onClick={onBack} className="text-zinc-500 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full">
+                <ChevronLeft size={20} />
+              </button>
+              <div className="flex items-center gap-3 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+                  <span className="font-black tracking-tighter text-lg md:text-xl uppercase italic">WINF™</span>
+                  <div className="hidden sm:flex items-center gap-2 px-2 py-0.5 rounded-full border border-zinc-800 bg-white/5">
+                    <div className="w-1 h-1 bg-white/40 rounded-full"></div>
+                    <span className="text-[7px] font-black text-zinc-400 uppercase tracking-widest">Portal Cliente</span>
+                  </div>
+              </div>
             </div>
+
+            <button 
+              onClick={() => window.open('https://wa.me/5513999191510', '_blank')} 
+              className="flex items-center gap-3 bg-white/5 border border-white/10 px-6 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-all shadow-xl"
+            >
+              <MessageSquare size={14} /> Suporte Técnico
+            </button>
           </div>
-          <button onClick={() => window.open('https://wa.me/5513999191510', '_blank')} className="hidden sm:flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-winf-primary hover:text-white transition-colors">
-            <MessageSquare size={14} /> Suporte Técnico
-          </button>
         </div>
       </nav>
 

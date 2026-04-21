@@ -36,12 +36,6 @@ const ModuleBlackshopAdmin: React.FC = () => {
   };
 
   const handleSave = async () => {
-    if (user?.id === 'proto-tiago-001') {
-      alert("Aviso: No modo proto (demo), as alterações não serão salvas permanentemente no banco central. O banco precisaria estar online.");
-      setIsEditing(null);
-      return;
-    }
-
     try {
       if (isEditing === 'new') {
         await addDoc(collection(db, 'products'), {

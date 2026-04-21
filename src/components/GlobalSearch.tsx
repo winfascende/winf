@@ -11,11 +11,13 @@ import {
   Package, 
   GraduationCap,
   ChevronRight,
-  Clock
+  Clock,
+  Grid
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWinf } from '../contexts/WinfContext';
 import { ViewState } from '../types';
+import { getAllModules } from '../config/modules';
 
 interface GlobalSearchProps {
   onClose: () => void;
@@ -23,11 +25,15 @@ interface GlobalSearchProps {
 }
 
 const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, onNavigate }) => {
-  const { products, documentItems, trainingModules } = useWinf();
+  const { products, documentItems, trainingModules, user } = useWinf();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [dateFilter, setDateFilter] = useState<string>('All'); // All, Today, Week, Month
-  const [activeTab, setActiveTab] = useState<'All' | 'Products' | 'Documents' | 'Academy'>('All');
+  const [activeTab, setActiveTab] = useState<'All' | 'Products' | 'Documents' | 'Academy' | 'Tools'>('All');
+
+  const allModules = useMemo(() => {
+    return getAllModules().filter(m => !m.isAdminOnly || user?.role === 'Admin');
+  }, [user?.role]);
 
   const categories = useMemo(() => {
     const productCats = Array.from(new Set(products.map(p => p.category).filter(Boolean)));
@@ -38,6 +44,11 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, onNavigate }) => {
     if (!searchQuery && selectedCategory === 'All' && dateFilter === 'All') return [];
 
     const query = searchQuery.toLowerCase();
+
+    // Filter Modules
+    const filteredModules = allModules.filter(m => 
+      m.title.toLowerCase().includes(query) || m.desc.toLowerCase().includes(query)
+    ).map(m => ({ ...m, type: 'Tool' as const }));
 
     // Filter Products
     const filteredProducts = products.filter(p => {
@@ -94,20 +105,24 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, onNavigate }) => {
 
     let results = [];
     if (activeTab === 'All') {
-      results = [...filteredProducts, ...filteredDocs, ...filteredTraining];
+      results = [...filteredModules, ...filteredProducts, ...filteredDocs, ...filteredTraining];
     } else if (activeTab === 'Products') {
       results = filteredProducts;
     } else if (activeTab === 'Documents') {
       results = filteredDocs;
     } else if (activeTab === 'Academy') {
       results = filteredTraining;
+    } else if (activeTab === 'Tools') {
+      results = filteredModules;
     }
 
     return results;
-  }, [searchQuery, selectedCategory, dateFilter, activeTab, products, documentItems, trainingModules]);
+  }, [searchQuery, selectedCategory, dateFilter, activeTab, products, documentItems, trainingModules, allModules]);
 
   const handleResultClick = (result: any) => {
-    if (result.type === 'Product') {
+    if (result.type === 'Tool') {
+      onNavigate(result.viewState || result.view_state);
+    } else if (result.type === 'Product') {
       onNavigate(ViewState.PRODUCTS_CATALOG);
     } else if (result.type === 'Document') {
       onNavigate(ViewState.MODULE_DATA_CORE);
@@ -192,7 +207,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, onNavigate }) => {
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Tabs */}
           <div className="px-8 pt-8 border-b border-white/5 flex gap-8">
-            {['All', 'Products', 'Documents', 'Academy'].map((tab) => (
+            {['All', 'Tools', 'Products', 'Documents', 'Academy'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab as any)}
@@ -201,6 +216,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, onNavigate }) => {
                 }`}
               >
                 {tab === 'All' ? 'Tudo' : 
+                 tab === 'Tools' ? 'Ferramentas' :
                  tab === 'Products' ? 'Produtos' : 
                  tab === 'Documents' ? 'Documentos' : 'Academy'}
                 {activeTab === tab && (
@@ -227,11 +243,13 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, onNavigate }) => {
                     className="w-full group bg-white/[0.02] border border-white/5 hover:border-winf-primary/30 p-6 rounded-2xl flex items-center gap-6 transition-all text-left"
                   >
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                      result.type === 'Tool' ? 'bg-winf-primary/10 text-winf-primary' :
                       result.type === 'Product' ? 'bg-blue-500/10 text-blue-500' :
                       result.type === 'Document' ? 'bg-purple-500/10 text-purple-500' :
                       'bg-yellow-500/10 text-yellow-500'
                     }`}>
-                      {result.type === 'Product' ? <Package size={24} /> :
+                      {result.type === 'Tool' ? (result.icon ? <result.icon size={24} /> : <Grid size={24} />) :
+                       result.type === 'Product' ? <Package size={24} /> :
                        result.type === 'Document' ? <FileText size={24} /> :
                        <GraduationCap size={24} />}
                     </div>
@@ -239,7 +257,7 @@ const GlobalSearch: React.FC<GlobalSearchProps> = ({ onClose, onNavigate }) => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-1">
                         <span className="text-[10px] font-black uppercase tracking-widest text-gray-500">
-                          {result.type}
+                          {result.type === 'Tool' ? 'Ferramenta' : result.type}
                         </span>
                         {result.category && (
                           <>

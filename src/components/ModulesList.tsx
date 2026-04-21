@@ -1,18 +1,22 @@
 import React from 'react';
 import { 
-  Zap, Globe, Star, Gauge, ShoppingBag, Wallet, Scissors,
-  GraduationCap, Briefcase, FileSpreadsheet, 
-  Building2, ShieldCheck, MonitorPlay, ArrowUpRight,
-  Package, LayoutDashboard, Users, Target, Monitor, Link, HelpCircle, Brain
+  Star, ArrowUpRight
 } from 'lucide-react';
-import { ViewState } from '../types';
+import { useWinf } from '../contexts/WinfContext';
+import { MODULES_CONFIG, ADMIN_MODULES } from '../config/modules';
 
-interface ModulesListProps {
-  onNavigate: (view: ViewState) => void;
-  userRole?: string;
+interface ToolCardProps {
+  id: string;
+  title: string;
+  icon: any;
+  desc: string;
+  onClick: () => void;
+  isComingSoon?: boolean;
+  isFavorite?: boolean;
+  onToggleFavorite?: (e: React.MouseEvent) => void;
 }
 
-const ToolCard = ({ title, icon: Icon, desc, onClick, isComingSoon }: any) => (
+const ToolCard: React.FC<ToolCardProps> = ({ title, icon: Icon, desc, onClick, isComingSoon, isFavorite, onToggleFavorite }) => (
   <div className="relative group/tooltip">
     <button 
       onClick={isComingSoon ? undefined : onClick} 
@@ -30,7 +34,18 @@ const ToolCard = ({ title, icon: Icon, desc, onClick, isComingSoon }: any) => (
         </div>
         <p className="text-xs text-winf-text_secondary truncate">{desc}</p>
       </div>
-      {!isComingSoon && <ArrowUpRight size={16} className="text-winf-text_muted group-hover:text-white transition-colors" />}
+      
+      {!isComingSoon && (
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={onToggleFavorite}
+            className={`p-1.5 rounded-lg transition-all ${isFavorite ? 'text-yellow-500' : 'text-winf-text_muted hover:text-white opacity-0 group-hover:opacity-100'}`}
+          >
+            <Star size={16} fill={isFavorite ? 'currentColor' : 'none'} />
+          </button>
+          <ArrowUpRight size={16} className="text-winf-text_muted group-hover:text-white transition-colors" />
+        </div>
+      )}
     </button>
     
     {/* Tooltip */}
@@ -41,46 +56,15 @@ const ToolCard = ({ title, icon: Icon, desc, onClick, isComingSoon }: any) => (
   </div>
 );
 
-const ModulesList: React.FC<ModulesListProps> = ({ onNavigate, userRole }) => {
-  const tools = [
-    { category: 'Comercial', items: [
-        { title: 'Consultoria Digital', icon: Link, desc: 'Link de Atendimento & QR Code', action: () => onNavigate(ViewState.MODULE_CONSULTANCY_LINK) },
-        { title: 'WINF BRAIN™', icon: Brain, desc: 'Inteligência Artificial Central', action: () => onNavigate(ViewState.MODULE_WINF_BRAIN) },
-        { title: 'Orçamentos Elite', icon: FileSpreadsheet, desc: 'Gerador de Propostas', action: () => onNavigate(ViewState.MODULE_QUOTES) },
-        { title: 'Blackshop™', icon: ShoppingBag, desc: 'Loja Oficial Winf', action: () => onNavigate(ViewState.SALES_FUNNEL) },
-    ]},
-    { category: 'Operacional', items: [
-        { title: 'Winf Stock™', icon: Package, desc: 'Gestão de Materiais', action: () => onNavigate(ViewState.MODULE_STOCK) },
-        { title: 'Financeiro', icon: Wallet, desc: 'Gestão de Caixa', action: () => onNavigate(ViewState.MODULE_FINANCIAL) },
-        { title: 'Winf Academy™', icon: GraduationCap, desc: 'Treinamento & Certificação', action: () => onNavigate(ViewState.MODULE_ACADEMY) },
-    ]},
-    { category: 'Técnico', items: [
-        { title: 'Winf Precision™', icon: Scissors, desc: 'Otimizador de Corte', action: () => onNavigate(ViewState.MODULE_WINF_CUT) },
-        { title: 'Gestão de Serviços', icon: ShieldCheck, desc: 'Instalações & Garantias', action: () => onNavigate(ViewState.MODULE_INSTALLATIONS) },
-        { title: 'Catálogo Pro', icon: Package, desc: 'Produtos & Fichas Técnicas', action: () => onNavigate(ViewState.PRODUCTS_CATALOG) },
-    ]},
-    { category: 'Estratégico', items: [
-        { title: 'Arsenal Tático', icon: Zap, desc: 'Scripts & Marketing', action: () => onNavigate(ViewState.MODULE_ARSENAL) },
-        { title: 'Central de Integrações', icon: Globe, desc: 'Zapier, Webhooks e APIs', action: () => onNavigate(ViewState.MODULE_INTEGRATIONS) },
-        { title: 'Rede de Operadores', icon: Users, desc: 'Winf Connect™ Community', action: () => onNavigate(ViewState.MODULE_CONNECT) },
-        { title: 'W-Rank', icon: Star, desc: 'Nível & Performance', action: () => onNavigate(ViewState.W_RANK) },
-        { title: 'FAQ Central', icon: HelpCircle, desc: 'Suporte & Dúvidas', action: () => onNavigate(ViewState.MODULE_FAQ) },
-    ]},
-    { category: 'Expansão', items: [
-        { title: 'Kiosk Mode', icon: Monitor, desc: 'Interface de Varejo Shopping', action: () => {}, isComingSoon: true },
-        { title: 'Studio Flagship', icon: Building2, desc: 'Gestão de Loja Conceito', action: () => {}, isComingSoon: true },
-    ]}
-  ];
+const ModulesList: React.FC<{ onNavigate: (view: any) => void; userRole?: string }> = ({ onNavigate, userRole }) => {
+  const { favoriteModules, toggleFavoriteModule } = useWinf();
+
+  const tools = [...MODULES_CONFIG];
 
   if (userRole === 'Admin') {
     tools.push({
       category: 'Administrativo',
-      items: [
-        { title: 'The Board™', icon: LayoutDashboard, desc: 'Gestão de Rede', action: () => onNavigate(ViewState.MODULE_THE_BOARD) },
-        { title: 'Gestor Catálogo', icon: Package, desc: 'Single Source of Truth', action: () => onNavigate(ViewState.MODULE_BLACKSHOP_ADMIN) },
-        { title: 'Mission Control™', icon: Target, desc: 'Distribuição de Leads', action: () => onNavigate(ViewState.MODULE_MISSION_CONTROL) },
-        { title: 'WINF™ WORLD', icon: Globe, desc: 'Orquestração de Agentes Global', action: () => onNavigate(ViewState.MODULE_WINF_WORLD) },
-      ]
+      items: ADMIN_MODULES
     });
   }
 
@@ -92,11 +76,29 @@ const ModulesList: React.FC<ModulesListProps> = ({ onNavigate, userRole }) => {
       </div>
 
       {tools.map((section, idx) => (
-        <div key={idx} className="space-y-3">
-          <h2 className="text-xs font-bold uppercase tracking-widest text-winf-text_muted pl-1">{section.category}</h2>
+        <div key={idx} className="space-y-4">
+          <div className="flex items-center gap-4 group/header">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-winf-text_muted pl-1 transition-colors group-hover/header:text-winf-primary">
+              {section.category}
+            </h2>
+            <div className="flex-1 h-px bg-gradient-to-r from-winf-primary/20 to-transparent"></div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {section.items.map((tool, tIdx) => (
-              <ToolCard key={tIdx} {...tool} onClick={tool.action} />
+            {section.items.map((tool) => (
+              <ToolCard 
+                key={tool.id} 
+                id={tool.id}
+                title={tool.title}
+                icon={tool.icon}
+                desc={tool.desc}
+                isComingSoon={tool.isComingSoon}
+                isFavorite={favoriteModules.includes(tool.id)}
+                onToggleFavorite={(e) => {
+                  e.stopPropagation();
+                  toggleFavoriteModule(tool.id);
+                }}
+                onClick={() => onNavigate(tool.viewState)} 
+              />
             ))}
           </div>
         </div>

@@ -1,432 +1,697 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Zap, 
-  ShieldCheck, 
-  Thermometer, 
-  Smartphone, 
-  ChevronRight, 
-  ChevronLeft, 
-  QrCode, 
-  CheckCircle, 
-  Calendar,
-  Car,
-  CreditCard,
-  X,
-  Play,
-  Maximize2,
-  Building2,
-  Lock,
-  ArrowRight,
-  // Fix: Added missing RefreshCw import
-  RefreshCw
+  X, User, Smartphone, Home, Building2, ChevronRight, ArrowLeft, ArrowRight,
+  Eye, View, Mountain, MoveHorizontal, Columns, LayoutGrid, Box, Ruler, Maximize,
+  ThermometerSun, Flame, Activity, Zap
 } from 'lucide-react';
-import { useWinf } from '../contexts/WinfContext';
 
 interface ModuleKioskModeProps {
-  onExit: () => void;
+  onBack: () => void;
 }
 
-type KioskState = 'IDLE' | 'MENU' | 'PRODUCT_SELECT' | 'DETAILS' | 'CART' | 'CHECKOUT' | 'SUCCESS';
+// Helper: Haptic Feedback
+const triggerHaptic = (type: 'light' | 'medium' | 'heavy' = 'light') => {
+  if (typeof navigator !== 'undefined' && navigator.vibrate) {
+    if (type === 'light') navigator.vibrate(10);
+    if (type === 'medium') navigator.vibrate(25);
+    if (type === 'heavy') navigator.vibrate([30, 50, 30]);
+  }
+};
 
-// Lista atualizada com a nova Linha Arquitetura Oficial
-const PRODUCTS = [
-    // --- AUTOMOTIVO ---
-    {
-        id: 'aerocore-film',
-        name: 'AeroCore™ Nano-Ceramic',
-        category: 'Proteção Solar Automotiva',
-        price: 890,
-        image: 'https://images.unsplash.com/photo-1614162692292-7ac56d7f7f1e?q=80&w=2070&auto=format&fit=crop',
-        benefits: ['Rejeição de Calor 99%', 'Visibilidade Noturna HD', 'Garantia Vitalícia'],
-        description: 'A tecnologia mais avançada do mundo para controle térmico automotivo. Sinta a diferença imediata no conforto do seu veículo.'
-    },
-    {
-        id: 'neoskin-ppf',
-        name: 'NeoSkin™ PPF Protection',
-        category: 'Proteção de Pintura',
-        price: 3500,
-        image: 'https://images.unsplash.com/photo-1618557219623-64a2747bb7eb?q=80&w=2070&auto=format&fit=crop',
-        benefits: ['Auto-Cura de Riscos', 'Brilho Intenso', 'Proteção contra Pedras'],
-        description: 'Uma armadura invisível para seu veículo. A tecnologia de polímero com memória regenera riscos com o calor do sol.'
-    },
-    // --- ARQUITETURA (NOVOS) ---
-    {
-        id: 'invisible-arch',
-        name: 'Winf Invisible®',
-        category: 'Arquitetura',
-        price: 450,
-        image: 'https://images.unsplash.com/photo-1600607686527-6fb886090705?q=80&w=2668&auto=format&fit=crop',
-        benefits: ['Redução UV 100%', 'Bloqueio IR 86%', 'Garantia: 10 Anos'],
-        description: 'IR Advanced Ceramic. A proteção definitiva para quem não abre mão da luz natural. Totalmente transparente, bloqueio térmico extremo.'
-    },
-    {
-        id: 'dualreflect-arch',
-        name: 'Winf Dual Reflect®',
-        category: 'Arquitetura',
-        price: 380,
-        image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop',
-        benefits: ['Redução UV 99%', 'Bloqueio IR 81%', 'Garantia: 7 Anos'],
-        description: 'Arquitetura Metalizada. O equilíbrio perfeito entre privacidade externa e visibilidade interna noturna. Eficiência térmica superior.'
-    },
-    {
-        id: 'blackpro-arch',
-        name: 'Winf BlackPro®',
-        category: 'Arquitetura',
-        price: 290,
-        image: 'https://images.unsplash.com/photo-1502672260273-b3db776b971a?q=80&w=2070&auto=format&fit=crop',
-        benefits: ['Redução UV 99%', 'Bloqueio IR 73%', 'Garantia: 7 Anos'],
-        description: 'Arquitetura Não Metalizada (Fumê). Privacidade total com sofisticação urbana. Reduz o brilho excessivo e protege seus móveis.'
-    },
-    // --- GADGETS ---
-    {
-        id: 'screen-shield',
-        name: 'Winf Gadget Shield',
-        category: 'Acessórios',
-        price: 150,
-        image: 'https://images.unsplash.com/photo-1592899677712-a5a254503481?q=80&w=2070&auto=format&fit=crop',
-        description: 'Proteção nanocerâmica para telas de iPhone e Android. Resistência contra impactos e riscos.',
-        benefits: ['Toque Suave', 'Anti-Digitais', 'Instalação na Hora']
-    }
+// Animated Number Component
+const AnimatedNumber = ({ value, suffix = '' }: { value: number | string, suffix?: string }) => {
+  const [count, setCount] = useState(0);
+  const target = typeof value === 'number' ? value : parseInt(value as string) || 0;
+  
+  useEffect(() => {
+    if (typeof value !== 'number' && isNaN(target)) return;
+    
+    let start = 0;
+    const duration = 1500; 
+    const increment = target / (duration / 16); 
+    
+    const timer = setInterval(() => {
+      start += increment;
+      if (start >= target) {
+        clearInterval(timer);
+        setCount(target);
+      } else {
+        setCount(Math.ceil(start));
+      }
+    }, 16);
+    
+    return () => clearInterval(timer);
+  }, [target, value]);
+
+  if (typeof value !== 'number' && isNaN(target)) return <>{value}</>;
+  return <>{count}{suffix}</>;
+};
+
+const ENVIRONMENTS = [
+  {
+    id: 'ocean-ap',
+    name: 'Cobertura Alto Padrão',
+    viewBg: 'https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&q=80&w=2400',
+    outBg: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=2400'
+  },
+  {
+    id: 'forest-house',
+    name: 'Mansão na Floresta',
+    viewBg: 'https://images.unsplash.com/photo-1449844908441-8829872d2607?auto=format&fit=crop&q=80&w=2400', 
+    outBg: 'https://images.unsplash.com/photo-1510798831971-661eb04b3739?auto=format&fit=crop&q=80&w=2400'
+  },
+  {
+    id: 'street-house',
+    name: 'Residência Urbana',
+    viewBg: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?auto=format&fit=crop&q=80&w=2400',
+    outBg: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&q=80&w=2400'
+  }
 ];
 
-const ModuleKioskMode: React.FC<ModuleKioskModeProps> = ({ onExit }) => {
-    const { addOrder } = useWinf();
-    const [state, setState] = useState<KioskState>('IDLE');
-    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-    const [selectedProduct, setSelectedProduct] = useState<any>(null);
-    const [secretTapCount, setSecretTapCount] = useState(0); 
-    const [scheduleDate, setScheduleDate] = useState('');
+const REFLECTIONS = {
+  in: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&q=80&w=2400',
+  out: 'https://images.unsplash.com/photo-1464802686167-b939a6910659?auto=format&fit=crop&q=80&w=2400'
+};
 
-    // Reset to idle if inactive for 2 minutes
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (state !== 'IDLE') setState('IDLE');
-        }, 120000);
-        return () => clearTimeout(timer);
-    }, [state]);
+const FILMS = [
+  { 
+    id: 'invisible', name: 'Winf Select™ Invisible', type: 'NanoCeramic', 
+    vlt: 70, irr: 86, uvr: 100,
+    img: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800',
+    desc: 'Transparência cristalina e rejeição térmica extrema ativada por nanocerâmica em camadas atômicas.',
+    tint: 'rgba(20, 25, 30, 0.08)', reflectionOut: 0.15, reflectionIn: 0.1
+  },
+  { 
+    id: 'dualreflect', name: 'Winf Select™ DualReflect', type: 'DualReflective', 
+    vlt: 15, irr: 81, uvr: 99, 
+    img: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800',
+    desc: 'Controle bioclimático de alto impacto. Reflexão calibrada para privacidade sem comprometer a visibilidade interna.',
+    tint: 'rgba(10, 15, 20, 0.60)', reflectionOut: 0.85, reflectionIn: 0.15
+  },
+  { 
+    id: 'blackpro', name: 'Winf Select™ BlackPro', type: 'Carbon', 
+    vlt: 5, irr: 73, uvr: 99, 
+    img: 'https://images.unsplash.com/photo-1600607686527-6fb886090705?auto=format&fit=crop&q=80&w=800',
+    desc: 'Privacidade impenetrável estruturada em NanoCarbono. Absorção de luz máxima com eliminação rigorosa de reflexos.',
+    tint: 'rgba(5, 5, 5, 0.85)', reflectionOut: 0.1, reflectionIn: 0.1
+  },
+  { 
+    id: 'safeguard', name: 'Winf Select™ SafeGuard', type: 'Shield-S', 
+    vlt: 80, irr: 45, uvr: 99, 
+    img: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800',
+    desc: 'Armadura balística de tenacidade molecular. Mantém a resiliência do vidro sob pressões críticas sem distorção óptica.',
+    tint: 'rgba(0, 0, 0, 0.03)', reflectionOut: 0.1, reflectionIn: 0.1
+  },
+  { 
+    id: 'white', name: 'Winf Select™ White', type: 'Decorative', 
+    vlt: 0, irr: '--', uvr: 99, 
+    img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&q=80&w=800',
+    desc: 'Privacidade absoluta com difusão luminosa. Branco fosco purista que transfigura a luz direta em ambientação suave.',
+    tint: 'rgba(255, 255, 255, 0.8)', isFrosted: true, reflectionOut: 0.1, reflectionIn: 0.1
+  }
+];
 
-    const handleSecretTap = () => {
-        setSecretTapCount(prev => {
-            const newVal = prev + 1;
-            if (newVal >= 5) {
-                const pass = prompt("ADMIN KEYPAD (Donos Apenas):");
-                if (pass === "winf2025") onExit();
-                return 0;
-            }
-            return newVal;
-        });
+const ModuleKioskMode: React.FC<ModuleKioskModeProps> = ({ onBack }) => {
+  const [step, setStep] = useState(0);
+  const [lead, setLead] = useState({ name: '', phone: '' });
+  const [projectType, setProjectType] = useState<'casa' | 'empresa' | null>(null);
+  const [glassType, setGlassType] = useState<string | null>(null);
+  const [projectSize, setProjectSize] = useState<{ id: string, label: string } | null>(null);
+  const [selectedFilmId, setSelectedFilmId] = useState<string | null>(null);
+
+  // Simulator States
+  const [sliderPos, setSliderPos] = useState(50);
+  const [isDragging, setIsDragging] = useState(false);
+  const [viewMode, setViewMode] = useState<'IN' | 'OUT'>('IN');
+  const [thermalMode, setThermalMode] = useState(false);
+  const [envIndex, setEnvIndex] = useState(0);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const resetKiosk = () => {
+    setStep(0);
+    setLead({ name: '', phone: '' });
+    setProjectType(null);
+    setGlassType(null);
+    setProjectSize(null);
+    setSelectedFilmId(null);
+    setSliderPos(50);
+    setThermalMode(false);
+  };
+
+  const advanceTo = (s: number) => {
+    triggerHaptic('medium');
+    setStep(s);
+  };
+
+  const handleFinish = () => {
+    triggerHaptic('heavy');
+    setStep(7);
+    setTimeout(() => resetKiosk(), 10000);
+  };
+
+  useEffect(() => {
+    const handleMouseUp = () => setIsDragging(false);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchend', handleMouseUp);
+    return () => {
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchend', handleMouseUp);
     };
+  }, []);
 
-    const handleCheckout = () => {
-        // Mock order creation
-        setState('SUCCESS');
-        setTimeout(() => setState('IDLE'), 10000);
-    };
+  const handleInteract = (clientX: number) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    let percent = ((clientX - rect.left) / rect.width) * 100;
+    percent = Math.max(0, Math.min(percent, 100));
+    setSliderPos(percent);
+  };
 
-    // --- IDLE SCREEN (ATTRACT MODE) ---
-    if (state === 'IDLE') {
-        return (
-            <div className="fixed inset-0 bg-black z-[100] flex items-center justify-center cursor-pointer" onClick={() => setState('MENU')}>
-                {/* Background Video Simulator */}
-                <div className="absolute inset-0 overflow-hidden">
-                    <img 
-                        src="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=1983&auto=format&fit=crop" 
-                        className="w-full h-full object-cover opacity-40 animate-[pulse_8s_ease-in-out_infinite] scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/30"></div>
-                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.8)_100%)]"></div>
+  const handleGlobalMouseMove = (e: React.MouseEvent) => {
+    if (step === 6) {
+      const x = (e.clientX / window.innerWidth) * 2 - 1;
+      const y = (e.clientY / window.innerHeight) * 2 - 1;
+      setMousePos({ x, y });
+    }
+    if (isDragging) handleInteract(e.clientX);
+  };
+
+  const handleGlobalTouchMove = (e: React.TouchEvent) => {
+    if (isDragging) handleInteract(e.touches[0].clientX);
+  };
+
+  const selectedFilm = FILMS.find(f => f.id === selectedFilmId);
+  const activeEnv = ENVIRONMENTS[envIndex];
+
+  return (
+    <div 
+      className="fixed inset-0 bg-[#000] z-[500] font-sans text-white overflow-hidden select-none flex flex-col antialiased"
+      onMouseMove={handleGlobalMouseMove}
+      onTouchMove={handleGlobalTouchMove}
+    >
+      {/* Global Exit */}
+      <button 
+        onClick={onBack}
+        className="absolute top-6 right-6 z-[600] p-4 opacity-10 hover:opacity-100 transition-opacity pointer-events-auto rounded-full hover:bg-white/10"
+      >
+        <X size={28} className="text-white" />
+      </button>
+
+      <AnimatePresence mode="wait">
+        
+        {/* STEP 0: ATTRACTOR SCREEN */}
+        {step === 0 && (
+          <motion.div 
+            key="step0"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, filter: 'blur(20px)' }} transition={{ duration: 1.2 }}
+            className="absolute inset-0 flex flex-col items-center justify-center bg-cover bg-center cursor-pointer group"
+            style={{ backgroundImage: `url(https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&q=80&w=2400)` }}
+            onClick={() => advanceTo(1)}
+          >
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-[#050505]"></div>
+            <div className="absolute top-0 right-0 w-1/2 h-1/2 bg-blue-500/10 blur-[120px] rounded-full pointer-events-none transition-opacity duration-1000 group-hover:opacity-50"></div>
+            
+            <div className="text-center relative z-10 p-12">
+              <motion.h1 
+                initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.5, duration: 1 }}
+                className="text-7xl md:text-9xl font-extralight tracking-[0.1em] mb-4 text-white drop-shadow-2xl"
+              >
+                WINF<span className="font-medium tracking-normal opacity-90 text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400">™</span>
+              </motion.h1>
+              <motion.div 
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1, duration: 1 }}
+                className="text-sm font-light uppercase tracking-[0.6em] text-white/50 mb-24"
+              >
+                The Sensory Experience
+              </motion.div>
+              
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 1.5, duration: 2, repeat: Infinity, repeatType: 'reverse' }}
+                className="bg-white/5 text-white px-16 py-6 rounded-full border border-white/10 text-xs font-medium uppercase tracking-[0.4em] inline-flex items-center gap-6 backdrop-blur-xl group-hover:bg-white/10 group-hover:border-white/30 transition-all shadow-[0_0_40px_rgba(255,255,255,0.05)]"
+              >
+                Toque para Iniciar a Configuração <Zap size={18} className="opacity-70 text-blue-400" />
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* STEP 1: LEAD CAPTURE */}
+        {step === 1 && (
+          <motion.div 
+            key="step1"
+            initial={{ opacity: 0, filter: 'blur(20px)' }} animate={{ opacity: 1, filter: 'blur(0px)' }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.8 }}
+            className="absolute inset-0 flex flex-col p-8 md:p-24 max-w-5xl mx-auto w-full justify-center bg-black/40"
+          >
+            <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-white/5 blur-[150px] rounded-full pointer-events-none"></div>
+
+            <button onClick={() => advanceTo(0)} className="absolute top-12 left-12 flex items-center gap-4 text-white/40 hover:text-white text-xs font-bold uppercase tracking-[0.3em] transition-colors z-20">
+              <ArrowLeft size={16} /> Cancelar
+            </button>
+
+            <div className="relative z-10 w-full md:w-2/3">
+              <h2 className="text-4xl md:text-6xl font-extralight tracking-tight text-white mb-2 leading-tight">Engenharia Exclusiva.</h2>
+              <p className="text-xl text-white/40 font-light mb-20 tracking-wide">Como nossos arquitetos devem chamar você?</p>
+
+              <div className="space-y-10 mb-16">
+                <div className="relative group">
+                  <span className="absolute -top-4 left-0 text-[10px] uppercase tracking-[0.3em] text-blue-400 font-bold opacity-0 group-focus-within:opacity-100 transition-opacity">Identidade</span>
+                  <input 
+                    type="text" autoComplete="off" placeholder="Nome e Sobrenome" value={lead.name}
+                    onChange={(e) => setLead({ ...lead, name: e.target.value })}
+                    className="w-full bg-transparent border-b border-white/20 py-4 text-3xl font-light text-white placeholder:text-white/20 focus:border-white focus:outline-none transition-all rounded-none"
+                  />
                 </div>
-                
-                <div className="relative z-10 text-center animate-fade-in space-y-12 max-w-4xl px-10">
-                    <div className="w-40 h-40 mx-auto bg-zinc-800/5 border border-zinc-700/40 rounded-full flex items-center justify-center backdrop-blur-sm relative">
-                        <Zap size={80} className="text-zinc-400 drop-shadow-[0_0_20px_rgba(37,99,235,0.8)]" fill="currentColor" />
-                        <div className="absolute inset-0 rounded-full border border-zinc-700/20 animate-ping"></div>
+                <div className="relative group">
+                   <span className="absolute -top-4 left-0 text-[10px] uppercase tracking-[0.3em] text-blue-400 font-bold opacity-0 group-focus-within:opacity-100 transition-opacity">Contato Direto</span>
+                   <input 
+                    type="tel" autoComplete="off" placeholder="WhatsApp (DDD)" value={lead.phone}
+                    onChange={(e) => setLead({ ...lead, phone: e.target.value })}
+                    className="w-full bg-transparent border-b border-white/20 py-4 text-3xl font-light text-white placeholder:text-white/20 focus:border-white focus:outline-none transition-all rounded-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-6">
+                <button 
+                  disabled={lead.name.length < 3 || lead.phone.length < 9}
+                  onClick={() => advanceTo(2)} 
+                  className="w-full bg-white text-black py-6 rounded-none text-sm font-bold uppercase tracking-[0.3em] hover:bg-zinc-200 transition-all flex justify-between items-center px-10 disabled:opacity-20 disabled:bg-white/5 disabled:text-white disabled:cursor-not-allowed"
+                >
+                  Continuar Experiência <ArrowRight size={20} />
+                </button>
+                <button 
+                  onClick={() => { setLead({ name: 'Visitante VIP', phone: '' }); advanceTo(2); }} 
+                  className="w-full py-4 text-[11px] text-white/30 font-bold uppercase tracking-[0.3em] hover:text-white transition-colors"
+                >
+                  Explorar de forma anônima
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* STEP 2 & 3: APPLICATION TYPE & ELEMENT */}
+        {(step === 2 || step === 3) && (
+          <motion.div 
+            key={`step${step}`}
+            initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.6 }}
+            className="absolute inset-0 flex flex-col p-8 md:p-24 w-full h-full justify-center"
+          >
+            <div className="absolute inset-0 bg-gradient-to-tr from-[#050505] via-[#0a0a0a] to-[#111]"></div>
+            
+            <button onClick={() => advanceTo(step - 1)} className="absolute top-12 left-12 flex items-center gap-4 text-white/40 hover:text-white text-xs font-bold uppercase tracking-[0.3em] transition-all z-20">
+              <ArrowLeft size={16} /> Voltar
+            </button>
+
+            <div className="relative z-10 mb-16 text-center max-w-4xl mx-auto">
+              <div className="text-[10px] text-blue-400 font-bold uppercase tracking-[0.4em] mb-4">Mapeamento de Projeto</div>
+              <h2 className="text-4xl md:text-5xl font-extralight tracking-tight text-white mb-4">
+                {step === 2 ? `Para onde é o projeto, ${lead.name.split(' ')[0]}?` : 'Foco principal da aplicação:'}
+              </h2>
+            </div>
+
+            {step === 2 ? (
+              <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto w-full">
+                <button onClick={() => { setProjectType('casa'); advanceTo(3); }} className="group relative overflow-hidden border border-white/10 hover:border-white transition-all flex flex-col items-center justify-center p-16 bg-black">
+                   <Home size={40} strokeWidth={1} className="text-white/30 mb-8 group-hover:text-white transition-colors group-hover:scale-110 duration-500" />
+                   <h3 className="text-2xl font-light uppercase tracking-[0.2em] text-white">Residencial</h3>
+                </button>
+                <button onClick={() => { setProjectType('empresa'); advanceTo(3); }} className="group relative overflow-hidden border border-white/10 hover:border-white transition-all flex flex-col items-center justify-center p-16 bg-black">
+                   <Building2 size={40} strokeWidth={1} className="text-white/30 mb-8 group-hover:text-white transition-colors group-hover:scale-110 duration-500" />
+                   <h3 className="text-2xl font-light uppercase tracking-[0.2em] text-white">Corporativo</h3>
+                </button>
+              </div>
+            ) : (
+              <div className="relative z-10 grid grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto w-full">
+                {[
+                  { id: 'Varanda Premium', icon: Columns },
+                  { id: 'Janelas Residenciais', icon: LayoutGrid },
+                  { id: 'Portas em Vidro', icon: Box },
+                  { id: 'Fachada', icon: Building2 },
+                ].map(glass => (
+                  <button key={glass.id} onClick={() => { setGlassType(glass.id); advanceTo(4); }} className="group relative border border-white/5 hover:border-white transition-all flex flex-col items-center justify-center py-20 px-4 bg-black">
+                    <glass.icon size={36} strokeWidth={1} className="text-white/30 mb-6 group-hover:text-white transition-all group-hover:-translate-y-2" />
+                    <h3 className="text-sm font-light uppercase tracking-[0.1em] text-white/80 group-hover:text-white">{glass.id}</h3>
+                  </button>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* STEP 4: SCALE */}
+        {step === 4 && (
+          <motion.div 
+            key="step4"
+            initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 1.05 }} transition={{ duration: 0.6 }}
+            className="absolute inset-0 flex flex-col p-12 max-w-7xl mx-auto w-full justify-center"
+          >
+            <button onClick={() => advanceTo(3)} className="absolute top-12 left-12 flex items-center gap-4 text-white/40 hover:text-white text-xs font-bold uppercase tracking-[0.3em] transition-all z-20">
+              <ArrowLeft size={16} /> Voltar
+            </button>
+
+            <div className="text-center mb-16">
+              <div className="text-[10px] text-blue-400 font-bold uppercase tracking-[0.4em] mb-4">Dimensão Geométrica</div>
+              <h2 className="text-4xl md:text-5xl font-extralight tracking-tight text-white mb-4">Qual é a escala do projeto?</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { id: 'S', label: 'Essencial', size: 'Até 10m²', desc: 'Acabamentos pontuais' },
+                { id: 'M', label: 'Elegance', size: '10m² - 30m²', desc: 'Sacadas completas' },
+                { id: 'L', label: 'Prestige', size: '30m² - 60m²', desc: 'Múltiplos ambientes' },
+                { id: 'XL', label: 'Master', size: '+60m²', desc: 'Projetos Arquitetônicos' }
+              ].map(sz => (
+                <button
+                  key={sz.id}
+                  onClick={() => { setProjectSize({ id: sz.id, label: sz.label }); advanceTo(5); }}
+                  className="group flex flex-col items-center justify-center p-12 bg-[#050505] border border-white/5 hover:border-white transition-all text-center hover:bg-[#0a0a0a] hover:-translate-y-2 duration-500"
+                >
+                  <div className="text-5xl font-extralight text-white/20 group-hover:text-white transition-colors mb-4 font-mono">{sz.id}</div>
+                  <h3 className="text-xl font-medium tracking-widest uppercase text-white mb-1">{sz.label}</h3>
+                  <div className="text-sm text-blue-400 font-bold tracking-[0.2em] mb-4">{sz.size}</div>
+                  <div className="w-8 h-[1px] bg-white/20 mb-4 group-hover:w-16 group-hover:bg-blue-500 transition-all"></div>
+                  <p className="text-[10px] uppercase tracking-[0.1em] text-white/40">{sz.desc}</p>
+                </button>
+              ))}
+            </div>
+            
+            <div className="mt-12 text-center">
+              <button 
+                onClick={() => { setProjectSize({ id: 'ukn', label: 'Indefinido' }); advanceTo(5); }}
+                className="text-xs uppercase tracking-widest text-white/30 hover:text-white transition-colors"
+              >
+                Pular esta etapa / Não tenho certeza
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* STEP 5: CATALOG - Apple-style Carousel */}
+        {step === 5 && (
+           <motion.div 
+            key="step5"
+            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -30 }} transition={{ duration: 0.8 }}
+            className="absolute inset-0 flex flex-col pt-24 pb-12 bg-[#000]"
+          >
+            <div className="absolute top-12 left-12 right-12 flex justify-between items-center z-20">
+               <button onClick={() => advanceTo(4)} className="flex items-center gap-4 text-white/40 hover:text-white text-xs font-bold uppercase tracking-[0.3em] transition-all">
+                <ArrowLeft size={16} /> Voltar
+               </button>
+               <div className="text-right">
+                  <h2 className="text-xl font-light uppercase tracking-[0.3em] text-white">Select™ Collection</h2>
+                  <p className="text-[9px] text-blue-400 font-bold uppercase tracking-[0.4em] mt-1">Selecione e inicie a Simulação</p>
+               </div>
+            </div>
+
+            <div className="flex-1 overflow-x-auto no-scrollbar flex items-center snap-x snap-mandatory px-[10vw] gap-[5vw]">
+              {FILMS.map(film => {
+                const isSelected = selectedFilmId === film.id;
+                return (
+                  <div 
+                    key={film.id}
+                    onClick={() => {
+                      if (isSelected) advanceTo(6);
+                      else { setSelectedFilmId(film.id); triggerHaptic('light'); }
+                    }}
+                    className={`relative min-w-[320px] md:min-w-[400px] h-[65vh] snap-center cursor-pointer transition-all duration-700 transform flex flex-col justify-end p-10 overflow-hidden rounded-2xl ${isSelected ? 'scale-105 z-20 shadow-[0_40px_100px_rgba(255,255,255,0.05)] ring-1 ring-white/50' : 'scale-90 opacity-40 hover:opacity-80 z-10'}`}
+                  >
+                    <div className="absolute inset-0 bg-black">
+                      <img src={film.img} alt={film.name} className="absolute inset-0 w-full h-full object-cover mix-blend-luminosity opacity-40" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/90 to-transparent"></div>
                     </div>
                     
-                    <div className="space-y-4">
-                        <h1 className="text-7xl md:text-9xl font-heading font-black text-white tracking-tighter leading-none mb-4 uppercase">
-                            WINF <br/>
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-winf-aerocore_blue via-white to-zinc-950">GROUP.</span>
-                        </h1>
-                        <div className="h-1 w-24 bg-zinc-800 mx-auto rounded-full mb-8"></div>
-                        <p className="text-2xl text-gray-400 font-light tracking-[0.4em] uppercase">Touch to Experience Supremacy</p>
-                    </div>
+                    <div className="relative z-10 flex flex-col h-full justify-end">
+                      <div className="mb-auto font-mono text-[10px] text-white/30 uppercase tracking-widest">{film.id.toUpperCase()}</div>
+                      
+                      <div className="transform transition-transform duration-500">
+                        <p className="text-[10px] text-blue-400 font-bold uppercase tracking-[0.4em] mb-2">{film.type}</p>
+                        <h3 className="text-3xl font-extralight text-white tracking-tight mb-4">{film.name.replace('Winf Select™ ', '')}</h3>
+                        <p className="text-xs text-white/50 font-light leading-relaxed mb-8 pr-4">{film.desc}</p>
 
-                    <div className="flex justify-center gap-10 opacity-50 grayscale">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/4/44/Porsche_logo.svg" className="h-8 invert" />
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Ferrari_logo.svg" className="h-8 invert" />
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/21/Mercedes-Benz_logo.svg" className="h-8 invert" />
+                        <div className="grid grid-cols-3 gap-2 mb-8">
+                           <div className="flex flex-col border-l border-white/10 pl-3">
+                             <span className="text-[8px] text-white/30 uppercase tracking-[0.2em] mb-1">Visão (VLT)</span>
+                             <span className="text-lg text-white font-medium">{film.vlt}%</span>
+                           </div>
+                           <div className="flex flex-col border-l border-white/10 pl-3">
+                             <span className="text-[8px] text-white/30 uppercase tracking-[0.2em] mb-1">Calor (IRR)</span>
+                             <span className="text-lg text-white font-medium">{film.irr}{film.irr !== '--' ? '%' : ''}</span>
+                           </div>
+                           <div className="flex flex-col border-l border-white/10 pl-3">
+                             <span className="text-[8px] text-white/30 uppercase tracking-[0.2em] mb-1">Raios (UVR)</span>
+                             <span className="text-lg text-white font-medium">{film.uvr}%</span>
+                           </div>
+                        </div>
+
+                        <div className={`w-full py-4 text-[10px] font-bold uppercase tracking-[0.3em] text-center rounded-sm transition-all duration-500 border ${isSelected ? 'bg-white text-black border-white shadow-[0_0_30px_rgba(255,255,255,0.4)]' : 'bg-transparent border-white/20 text-white/60'}`}>
+                          {isSelected ? 'Lançar Simulador Sensorial' : 'Inspecionar Variante'}
+                        </div>
+                      </div>
                     </div>
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+        )}
+
+        {/* STEP 6: SENSORY SIMULATOR */}
+        {step === 6 && selectedFilm && activeEnv && (
+          <motion.div 
+            key="step6"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1 }}
+            className="absolute inset-0 z-50 bg-black cursor-ew-resize overflow-hidden"
+            ref={containerRef}
+            onMouseDown={(e) => { setIsDragging(true); handleInteract(e.clientX); triggerHaptic('light'); }}
+            onTouchStart={(e) => { setIsDragging(true); handleInteract(e.touches[0].clientX); triggerHaptic('light'); }}
+          >
+            {/* Core Immersive Environment (The View) */}
+            <div 
+              className="absolute inset-[-10%] transition-transform duration-100 ease-out z-0"
+              style={{ transform: `scale(1.05) translate(${mousePos.x * -15}px, ${mousePos.y * -15}px)` }}
+            >
+              {/* Layer 0: Raw Background (Right side) */}
+              <div className="absolute inset-0 overflow-hidden">
+                <div 
+                  className="absolute inset-0 bg-cover bg-center transition-all duration-1000"
+                  style={{ backgroundImage: `url(${viewMode === 'IN' ? activeEnv.viewBg : activeEnv.outBg})` }}
+                >
+                  {/* THERMAL OVERLAY VULNERABLE SIDE (HOT) */}
+                  {thermalMode && (
+                    <div className="absolute inset-0 mix-blend-color animate-pulse pointer-events-none transition-opacity duration-1000" style={{ backdropFilter: 'saturate(200%) hue-rotate(330deg)', backgroundColor: 'rgba(255, 50, 0, 0.4)' }}></div>
+                  )}
+
+                  {/* Sun Glare rays */}
+                  {viewMode === 'IN' && !thermalMode && (
+                    <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/30 via-transparent to-transparent opacity-60 mix-blend-screen pointer-events-none"></div>
+                  )}
+                </div>
+              </div>
+
+              {/* Layer 1: Protected View (Left side - Winf Film Applied) */}
+              <div 
+                className="absolute inset-0 overflow-hidden shadow-[inset_0_0_200px_rgba(0,0,0,0.5)] z-10"
+                style={{ clipPath: `inset(0 ${100 - sliderPos}% 0 0)` }}
+              >
+                <div 
+                  className="absolute inset-0 bg-cover bg-center transition-all duration-1000"
+                  style={{ backgroundImage: `url(${viewMode === 'IN' ? activeEnv.viewBg : activeEnv.outBg})` }}
+                >
+                   {/* THERMAL OVERLAY PROTECTED SIDE (COOL) */}
+                   {thermalMode && (
+                    <div className="absolute inset-0 mix-blend-color pointer-events-none transition-opacity duration-1000" style={{ backdropFilter: 'saturate(150%) hue-rotate(180deg)', backgroundColor: 'rgba(0, 100, 255, 0.4)' }}></div>
+                  )}
+
+                  {!thermalMode && (
+                    <>
+                      {selectedFilm.isFrosted && <div className="absolute inset-0 backdrop-blur-2xl bg-white/20"></div>}
+                      <div className="absolute inset-0 transition-colors duration-1000" style={{ backgroundColor: selectedFilm.tint }}></div>
+                      <div 
+                        className="absolute inset-0 bg-cover bg-center mix-blend-screen transition-opacity duration-1000"
+                        style={{ 
+                          backgroundImage: `url(${viewMode === 'IN' ? REFLECTIONS.in : REFLECTIONS.out})`,
+                          opacity: viewMode === 'OUT' ? selectedFilm.reflectionOut : selectedFilm.reflectionIn
+                        }}
+                      ></div>
+                    </>
+                  )}
+                </div>
+                {/* Edge line */}
+                <div className="absolute top-0 bottom-0 w-[2px] bg-gradient-to-r from-transparent to-white/30" style={{ right: 0 }}></div>
+              </div>
+            </div>
+
+            {/* FOREGROUND: Luxury 3D Room Overlay (Only shows in 'IN' mode) */}
+            {viewMode === 'IN' && (
+              <div className="absolute inset-0 pointer-events-none z-10">
+                 <div className="absolute top-0 w-full h-[15%] bg-gradient-to-b from-[#11100f] to-[#1a1918] shadow-[0_30px_60px_rgba(0,0,0,0.9)]"></div>
+                 
+                 <div className="absolute bottom-0 w-full h-[25%] bg-gradient-to-t from-[#0a0a0a] to-[#222120] shadow-[0_-30px_60px_rgba(0,0,0,0.9)] border-t-[8px] border-[#050505] flex items-end justify-center px-12 md:px-32 pb-0">
+                    <div className="w-[800px] h-32 md:h-48 bg-[#1a1816] rounded-t-3xl shadow-[0_-15px_50px_rgba(0,0,0,0.9)] opacity-95 border-t border-white/5 relative flex justify-center">
+                       <div className="absolute -top-6 w-[200px] h-6 bg-[#2a2826] rounded-t-md opacity-80 border-t border-white/10 hidden md:block"></div>
+                    </div>
+                 </div>
+                 
+                 <div className="absolute left-0 h-full w-[15%] bg-gradient-to-r from-[#11100f] to-[#1a1918] shadow-[30px_0_60px_rgba(0,0,0,0.9)] border-r-[16px] border-[#050505]"></div>
+                 <div className="absolute right-0 h-full w-[15%] bg-gradient-to-l from-[#11100f] to-[#1a1918] shadow-[-30px_0_60px_rgba(0,0,0,0.9)] border-l-[16px] border-[#050505]"></div>
+                 
+                 <div className="absolute top-[15%] bottom-[25%] left-[15%] right-[15%] flex border-[12px] border-[#0a0a0a] shadow-[inset_0_0_100px_rgba(0,0,0,0.3)]">
+                   <div className="flex-1 border-r-[12px] border-[#0a0a0a] shadow-[10px_0_20px_rgba(0,0,0,0.6)]"></div>
+                   <div className="flex-1 border-r-[12px] border-[#0a0a0a] shadow-[10px_0_20px_rgba(0,0,0,0.6)]"></div>
+                   <div className="flex-1"></div>
+                 </div>
+              </div>
+            )}
+
+            {/* SLIDER HANDLE */}
+            <div 
+              className="absolute top-0 bottom-0 z-30 flex items-center justify-center pointer-events-none transition-all duration-75"
+              style={{ left: `${sliderPos}%` }}
+            >
+              <div className="h-full w-[2px] bg-white/50 shadow-[0_0_20px_rgba(255,255,255,0.5)] relative">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-28 bg-black/60 backdrop-blur-2xl border border-white/50 rounded-full flex items-center justify-center pointer-events-auto shadow-[0_0_30px_rgba(0,0,0,0.8)] cursor-grab hover:scale-110 active:scale-95 transition-transform flex-col gap-2">
+                  <div className="w-1 h-2 bg-white/30 rounded-full"></div>
+                  <MoveHorizontal size={20} className={thermalMode ? "text-red-400" : "text-white"} />
+                  <div className="w-1 h-2 bg-white/30 rounded-full"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* HIGH-TECH HUD OVERLAYS */}
+            <div className="absolute inset-0 z-40 pointer-events-none flex flex-col justify-between p-6 md:p-12">
+              
+              {/* TOP HUD: Film Data */}
+              <div className="flex justify-between items-start pointer-events-auto">
+                <div className="bg-black/80 backdrop-blur-3xl border border-white/10 p-6 rounded-2xl flex flex-col w-80 shadow-[0_20px_40px_rgba(0,0,0,0.5)] overflow-hidden relative">
+                   <p className="text-[8px] uppercase tracking-[0.4em] text-blue-400 font-bold mb-1">{selectedFilm.type}</p>
+                   <h3 className="text-2xl font-light text-white mb-4">{selectedFilm.name.replace('Winf Select™ ', '')}</h3>
+                   
+                   <div className="flex justify-between pt-4 border-t border-white/10">
+                     <div className="flex flex-col text-center">
+                       <span className="text-[7px] text-white/30 uppercase tracking-[0.2em] mb-1">LUZ (VLT)</span>
+                       <span className="text-xl text-white font-medium"><AnimatedNumber value={selectedFilm.vlt} suffix="%" /></span>
+                     </div>
+                     <div className="flex flex-col text-center">
+                       <span className="text-[7px] text-white/30 uppercase tracking-[0.2em] mb-1">CALOR (IRR)</span>
+                       <span className={`text-xl font-medium transition-colors ${thermalMode ? 'text-red-400' : 'text-white'}`}>
+                          <AnimatedNumber value={selectedFilm.irr} suffix={selectedFilm.irr !== '--' ? '%' : ''} />
+                       </span>
+                     </div>
+                     <div className="flex flex-col text-center">
+                       <span className="text-[7px] text-white/30 uppercase tracking-[0.2em] mb-1">RAIOS (UVR)</span>
+                       <span className="text-xl text-purple-400 font-medium"><AnimatedNumber value={selectedFilm.uvr} suffix="%" /></span>
+                     </div>
+                   </div>
                 </div>
 
-                {/* Secret Admin Trigger (Top Left Corner) */}
-                <div className="absolute top-0 left-0 w-32 h-32 z-50" onClick={(e) => { e.stopPropagation(); handleSecretTap(); }}></div>
-            </div>
-        );
-    }
+                <div className="flex items-center gap-2">
+                  <button onClick={() => advanceTo(5)} className="bg-black/60 shadow-xl backdrop-blur-3xl border border-white/10 p-4 rounded-xl hover:bg-white/10 transition-colors hidden md:block">
+                    <ArrowLeft size={20} className="text-white/60" />
+                  </button>
+                  <button onClick={handleFinish} className="bg-white text-black px-10 py-5 rounded-xl text-[10px] uppercase tracking-[0.3em] font-bold hover:bg-zinc-200 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)]">
+                    Gerar Proposta
+                  </button>
+                </div>
+              </div>
 
-    return (
-        <div className="fixed inset-0 bg-[#050505] z-[100] flex flex-col font-sans text-white overflow-hidden selection:bg-none">
+              {/* BOTTOM HUD: Thermal Vision & Views */}
+              <div className="flex flex-col md:flex-row justify-between items-end gap-6 pointer-events-auto">
+                 
+                 {/* Thermal Mode Toggle */}
+                 <button 
+                   onClick={() => { triggerHaptic('medium'); setThermalMode(!thermalMode); }}
+                   className={`relative flex items-center gap-4 px-6 py-4 rounded-2xl border transition-all duration-500 overflow-hidden ${thermalMode ? 'bg-black/90 border-red-500/50 shadow-[0_0_40px_rgba(255,0,0,0.3)]' : 'bg-black/60 backdrop-blur-3xl border-white/10 hover:bg-white/10'}`}
+                 >
+                   {thermalMode && <div className="absolute top-0 bottom-0 left-0 w-1 bg-red-500 animate-[pulse_2s_ease-in-out_infinite]"></div>}
+                   
+                   <div className={`p-2 rounded-lg ${thermalMode ? 'bg-gradient-to-br from-red-500 to-orange-600' : 'bg-white/5'}`}>
+                     {thermalMode ? <Flame size={18} className="text-white" /> : <ThermometerSun size={18} className="text-white/50" />}
+                   </div>
+                   <div className="text-left">
+                     <div className="text-[9px] uppercase tracking-[0.2em] text-white/40 font-bold">Análise Térmica</div>
+                     <div className={`text-sm font-medium tracking-wide ${thermalMode ? 'text-red-400' : 'text-white'}`}>
+                       {thermalMode ? 'Modo Visão Térmica' : 'Espectro Visível'}
+                     </div>
+                   </div>
+                 </button>
+
+                 <div className="text-[9px] uppercase tracking-[0.5em] font-bold text-white/40 bg-black/60 backdrop-blur-md px-6 py-3 rounded-full hidden lg:block border border-white/5 shadow-2xl animate-pulse">
+                   &larr; <span className="mx-2">Deslize para Comparar Proteção Térmica</span> &rarr;
+                 </div>
+
+                 <div className="flex gap-2">
+                   <div className="flex bg-black/80 backdrop-blur-3xl border border-white/10 rounded-2xl p-1 shadow-2xl">
+                     <button 
+                       onClick={() => { setViewMode('IN'); triggerHaptic(); }} 
+                       className={`px-5 py-3 rounded-xl text-[9px] uppercase tracking-[0.2em] font-bold transition-all flex items-center gap-2 ${viewMode === 'IN' ? 'bg-white text-black' : 'text-white/40 hover:text-white'}`}
+                     >
+                       <Eye size={14} /> Interior
+                     </button>
+                     <button 
+                       onClick={() => { setViewMode('OUT'); triggerHaptic(); }} 
+                       className={`px-5 py-3 rounded-xl text-[9px] uppercase tracking-[0.2em] font-bold transition-all flex items-center gap-2 ${viewMode === 'OUT' ? 'bg-white text-black' : 'text-white/40 hover:text-white'}`}
+                     >
+                       <View size={14} /> Exterior
+                     </button>
+                   </div>
+                   
+                   <button 
+                     onClick={() => { setEnvIndex((envIndex + 1) % ENVIRONMENTS.length); triggerHaptic(); }} 
+                     className="px-6 py-3 bg-black/80 backdrop-blur-3xl border border-white/10 rounded-2xl text-[10px] uppercase tracking-[0.2em] font-bold text-white hover:bg-white/10 transition-all flex items-center shadow-2xl"
+                   >
+                     <Mountain size={14} className="mr-2 text-blue-400" /> {activeEnv.name} <ArrowRight size={10} className="ml-2 opacity-50" />
+                   </button>
+                 </div>
+
+              </div>
+            </div>
+
+          </motion.div>
+        )}
+
+        {/* STEP 7: SUCCESS */}
+        {step === 7 && (
+          <motion.div 
+            key="step7"
+            initial={{ opacity: 0, scale: 1.05 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1 }}
+            className="absolute inset-0 flex flex-col items-center justify-center p-12 bg-[#000] z-[600]"
+          >
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-[#050505] to-[#000]"></div>
+
+            <div className="w-px h-32 bg-gradient-to-b from-transparent to-white/20 mb-16 relative z-10"></div>
             
-            {/* Kiosk Header */}
-            <div className="h-24 border-b border-white/10 flex items-center justify-between px-10 bg-[#0a0a0a]">
-                <div className="flex items-center gap-4" onClick={() => setState('MENU')}>
-                    {/* Secret Tap Area on Logo */}
-                    <div className="w-12 h-12 bg-zinc-800 rounded flex items-center justify-center cursor-pointer active:scale-95 transition-transform shadow-[0_0_20px_rgba(37,99,235,0.3)]" onClick={(e) => { e.stopPropagation(); handleSecretTap(); }}>
-                        <span className="font-black text-2xl">W</span>
-                    </div>
-                    <div>
-                        <h2 className="text-xl font-bold tracking-widest">WINF RETAIL</h2>
-                        <p className="text-[10px] text-zinc-400 uppercase font-black tracking-widest">Nucleus v5.0 // Sync Ready</p>
-                    </div>
-                </div>
-                {state !== 'MENU' && state !== 'SUCCESS' && (
-                    <button onClick={() => setState('MENU')} className="flex items-center gap-2 text-gray-500 hover:text-white uppercase font-black tracking-widest text-xs border border-white/10 px-6 py-2.5 rounded-full transition-all">
-                        <X size={16} /> Abort Operation
-                    </button>
-                )}
+            <h2 className="text-4xl md:text-6xl font-extralight text-white mb-6 tracking-tight text-center relative z-10 w-full max-w-4xl">
+              Análise Concluída, <br/><span className="font-medium text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-500">{lead.name !== 'Visitante VIP' && lead.name !== 'Visitante' ? lead.name.split(' ')[0] : 'Visitante'}.</span>
+            </h2>
+            
+            <div className="text-lg text-white/40 max-w-2xl text-center leading-relaxed font-light mb-20 tracking-wide relative z-10">
+              {lead.name !== 'Visitante VIP' && lead.name !== 'Visitante' ? (
+                <>
+                  <p className="mb-4">
+                    Dimensionamento <strong className="text-white font-medium uppercase tracking-widest">{projectType === 'casa' ? 'Residencial' : 'Corporativo'}</strong> estruturado.
+                  </p>
+                  <p>
+                    Nossa engenharia processará a solução de <strong>{selectedFilm?.name}</strong> para <strong className="text-white font-medium">{glassType}</strong>. Os dados foram enviados ao seu consultor Winf.
+                  </p>
+                </>
+              ) : (
+                <p>O simulador entrou em modo de suspensão. Para calibrar uma blindagem térmica real, acione nossa arquitetura.</p>
+              )}
             </div>
-
-            {/* Content Area */}
-            <div className="flex-1 relative overflow-hidden">
-                
-                {/* --- MENU CATEGORIAS --- */}
-                {state === 'MENU' && (
-                    <div className="h-full p-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-slide-up">
-                        <div 
-                            onClick={() => { setSelectedCategory('Proteção Solar Automotiva'); setState('PRODUCT_SELECT'); }}
-                            className="bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-10 flex flex-col justify-end relative group cursor-pointer hover:border-zinc-700 transition-all duration-500"
-                        >
-                            <img src="https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=2070&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-                            <div className="relative z-10">
-                                <Car size={48} className="text-zinc-400 mb-4" />
-                                <h3 className="text-3xl font-bold uppercase mb-2">Automotivo</h3>
-                                <p className="text-gray-400 text-sm">Películas Térmicas AeroCore™</p>
-                            </div>
-                        </div>
-
-                        <div 
-                            onClick={() => { setSelectedCategory('Arquitetura'); setState('PRODUCT_SELECT'); }}
-                            className="bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-10 flex flex-col justify-end relative group cursor-pointer hover:border-winf-ascend_green transition-all duration-500"
-                        >
-                            <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-                            <div className="relative z-10">
-                                <Building2 size={48} className="text-winf-ascend_green mb-4" />
-                                <h3 className="text-3xl font-bold uppercase mb-2">Arquitetura</h3>
-                                <p className="text-gray-400 text-sm">Invisible, Dual Reflect & BlackPro</p>
-                            </div>
-                        </div>
-
-                        <div 
-                            onClick={() => { setSelectedCategory('Proteção de Pintura'); setState('PRODUCT_SELECT'); }}
-                            className="bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-10 flex flex-col justify-end relative group cursor-pointer hover:border-zinc-700 transition-all duration-500"
-                        >
-                            <img src="https://images.unsplash.com/photo-1618557219623-64a2747bb7eb?q=80&w=2070&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-                            <div className="relative z-10">
-                                <ShieldCheck size={48} className="text-zinc-400 mb-4" />
-                                <h3 className="text-3xl font-bold uppercase mb-2">PPF Protection</h3>
-                                <p className="text-gray-400 text-sm">NeoSkin™ Shield</p>
-                            </div>
-                        </div>
-
-                        <div 
-                            onClick={() => { setSelectedCategory('Acessórios'); setState('PRODUCT_SELECT'); }}
-                            className="bg-gradient-to-br from-gray-900 to-black border border-white/10 rounded-3xl p-10 flex flex-col justify-end relative group cursor-pointer hover:border-green-500 transition-all duration-500"
-                        >
-                            <img src="https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=1780&auto=format&fit=crop" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-                            <div className="relative z-10">
-                                <Smartphone size={48} className="text-green-500 mb-4" />
-                                <h3 className="text-3xl font-bold uppercase mb-2">Gadgets</h3>
-                                <p className="text-gray-400 text-sm">Proteção Mobile & Acessórios</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* --- SELEÇÃO DE PRODUTOS --- */}
-                {state === 'PRODUCT_SELECT' && (
-                    <div className="h-full p-10 flex flex-col animate-fade-in">
-                        <div className="flex items-center gap-6 mb-12">
-                             <button onClick={() => setState('MENU')} className="p-3 bg-white/5 rounded-full hover:bg-white/10 transition-all"><ChevronLeft size={24}/></button>
-                             <h2 className="text-4xl font-heading font-light text-white uppercase tracking-tight">
-                                CATEGORIA: <span className="font-bold text-zinc-400">{selectedCategory}</span>
-                             </h2>
-                        </div>
-                        
-                        <div className="flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20 px-4">
-                            {PRODUCTS.filter(p => p.category === selectedCategory).map(product => (
-                                <div key={product.id} className="bg-[#0A0A0A] border border-white/[0.05] rounded-[2rem] overflow-hidden group hover:border-zinc-700/40 transition-all duration-500">
-                                    <div className="h-72 overflow-hidden relative">
-                                        <img src={product.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                                        <div className="absolute top-6 right-6 bg-black/60 backdrop-blur-md border border-white/10 text-white font-black px-4 py-1.5 text-[9px] uppercase tracking-widest rounded-full">
-                                            W-ELITE ATSET
-                                        </div>
-                                    </div>
-                                    <div className="p-8">
-                                        <h3 className="text-2xl font-bold text-white mb-2 uppercase tracking-tight">{product.name}</h3>
-                                        <p className="text-gray-500 text-sm mb-8 leading-relaxed font-light line-clamp-2">{product.description}</p>
-                                        
-                                        <div className="flex justify-between items-center border-t border-white/[0.03] pt-6">
-                                            <div className="flex flex-col">
-                                                <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest">Valor Unitário</span>
-                                                <span className="text-2xl font-mono text-zinc-400 font-bold">R$ {product.price}</span>
-                                            </div>
-                                            <button 
-                                                onClick={() => { setSelectedProduct(product); setState('DETAILS'); }}
-                                                className="bg-white text-black px-8 py-3.5 rounded-sm font-black uppercase tracking-widest hover:bg-zinc-800 hover:text-white transition-all text-[10px] shadow-lg"
-                                            >
-                                                Ver Detalhes
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* --- DETALHES & AGENDAMENTO --- */}
-                {state === 'DETAILS' && selectedProduct && (
-                    <div className="h-full flex flex-col lg:flex-row animate-slide-up bg-[#050505]">
-                        <div className="lg:w-1/2 h-64 lg:h-full relative overflow-hidden">
-                            <img src={selectedProduct.image} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
-                            <div className="absolute bottom-16 left-16 max-w-lg">
-                                <span className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] mb-4 block">Product Dossier</span>
-                                <h2 className="text-6xl font-heading font-bold text-white mb-4 tracking-tighter leading-none">{selectedProduct.name}</h2>
-                                <p className="text-2xl text-gray-400 font-mono">R$ {selectedProduct.price},00</p>
-                            </div>
-                        </div>
-                        
-                        <div className="lg:w-1/2 p-16 lg:p-24 flex flex-col justify-center bg-[#080808] relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-40 bg-zinc-800/5 rounded-full blur-[100px] pointer-events-none"></div>
-                            
-                            <div className="space-y-12 mb-16 relative z-10">
-                                <div className="space-y-4">
-                                    <h3 className="text-xs font-black text-gray-500 uppercase tracking-[0.3em]">Benefícios Técnicos</h3>
-                                    <div className="grid grid-cols-1 gap-4">
-                                        {selectedProduct.benefits.map((benefit: string, i: number) => (
-                                            <div key={i} className="flex items-center gap-4 bg-white/[0.02] border border-white/[0.05] p-5 rounded-2xl">
-                                                <CheckCircle size={20} className="text-zinc-400" />
-                                                <span className="text-lg font-light text-gray-200">{benefit}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                <p className="text-gray-400 leading-relaxed text-lg font-light italic border-l-4 border-zinc-700 pl-8">
-                                    {selectedProduct.description}
-                                </p>
-                            </div>
-
-                            <div className="space-y-8 relative z-10">
-                                <div>
-                                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-[0.3em] mb-6">Disponibilidade de Instalação</label>
-                                    <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-                                        {['Hoje', 'Amanhã', 'Sexta', 'Sábado', 'Segunda'].map(day => (
-                                            <button 
-                                                key={day} 
-                                                onClick={() => setScheduleDate(day)}
-                                                className={`px-8 py-5 rounded-2xl border font-bold text-lg min-w-[140px] transition-all flex flex-col items-center gap-1 ${scheduleDate === day ? 'bg-zinc-800 border-zinc-700 text-white shadow-lg' : 'bg-black/40 border-white/10 text-gray-500 hover:border-white/30'}`}
-                                            >
-                                                <span className="text-xs uppercase tracking-widest opacity-60">Dia</span>
-                                                {day}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <button 
-                                    onClick={() => setState('CHECKOUT')}
-                                    className="w-full py-7 bg-white text-black text-xs font-black uppercase tracking-[0.4em] rounded-sm hover:bg-zinc-800 hover:text-white transition-all flex items-center justify-center gap-4 shadow-[0_0_50px_rgba(255,255,255,0.1)] group"
-                                >
-                                    Confirmar Escolha <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* --- CHECKOUT (PAGAMENTO) --- */}
-                {state === 'CHECKOUT' && (
-                    <div className="h-full flex items-center justify-center p-10 animate-fade-in relative">
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-                        
-                        <div className="bg-[#0A0A0A] border border-white/[0.05] p-16 rounded-[3rem] max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-20 shadow-2xl relative z-10">
-                            <div className="space-y-12">
-                                <h3 className="text-gray-500 font-black text-[10px] uppercase tracking-[0.4em] mb-6">Faturamento de Pedido</h3>
-                                <div className="flex gap-8 mb-8 pb-12 border-b border-white/[0.05]">
-                                    <div className="w-32 h-32 rounded-3xl overflow-hidden border border-white/10 shrink-0">
-                                        <img src={selectedProduct.image} className="w-full h-full object-cover" />
-                                    </div>
-                                    <div className="flex flex-col justify-center">
-                                        <h4 className="text-3xl font-bold text-white uppercase tracking-tight mb-2">{selectedProduct.name}</h4>
-                                        <p className="text-sm text-zinc-400 font-bold uppercase tracking-widest mb-4">Agendado: {scheduleDate || 'Imediato'}</p>
-                                        <p className="text-4xl font-mono text-white font-bold">R$ {selectedProduct.price},00</p>
-                                    </div>
-                                </div>
-                                <div className="space-y-6">
-                                    <div className="flex justify-between text-xl font-light text-gray-400">
-                                        <span>Subtotal Operacional</span>
-                                        <span className="font-mono">R$ {selectedProduct.price},00</span>
-                                    </div>
-                                    <div className="flex justify-between text-xl font-light text-zinc-400">
-                                        <span>Incentivo Kiosk Exclusive</span>
-                                        <span className="font-mono">- R$ 50,00</span>
-                                    </div>
-                                    <div className="flex justify-between text-4xl font-bold pt-8 border-t border-white/10">
-                                        <span className="uppercase tracking-tighter">Total</span>
-                                        <span className="text-zinc-400 font-mono tracking-tighter">R$ {selectedProduct.price - 50},00</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex flex-col items-center justify-center text-center bg-[#050505] p-12 rounded-[2.5rem] border border-white/[0.03] shadow-inner">
-                                <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.4em] mb-10">Sincronização Financeira (PIX)</p>
-                                <div className="bg-white p-6 rounded-[2rem] mb-10 shadow-[0_0_60px_rgba(255,255,255,0.1)] relative">
-                                    <QrCode size={240} className="text-black" />
-                                    <div className="absolute inset-0 border-[10px] border-black rounded-[2rem] pointer-events-none"></div>
-                                </div>
-                                <div className="flex items-center gap-3 text-zinc-400 animate-pulse mb-10">
-                                    <RefreshCw size={16} className="animate-spin" />
-                                    <span className="text-xs font-bold uppercase tracking-widest">Aguardando Gateway de Pagamento...</span>
-                                </div>
-                                
-                                <button 
-                                    onClick={handleCheckout}
-                                    className="w-full py-6 bg-white text-black font-black uppercase tracking-[0.4em] rounded-sm hover:bg-zinc-800 hover:text-white transition-all shadow-xl text-xs"
-                                >
-                                    Confirmar Liquidação
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* --- SUCESSO --- */}
-                {state === 'SUCCESS' && (
-                    <div className="h-full flex flex-col items-center justify-center text-center animate-scale-up p-10 bg-[#050505] relative overflow-hidden">
-                        <div className="absolute inset-0 bg-green-500/5 blur-[150px] rounded-full pointer-events-none"></div>
-                        <div className="w-40 h-40 bg-green-500 rounded-full flex items-center justify-center mb-12 shadow-[0_0_100px_rgba(34,197,94,0.4)] relative z-10">
-                            <CheckCircle size={80} className="text-black" />
-                        </div>
-                        <h2 className="text-6xl md:text-8xl font-heading font-black text-white mb-6 tracking-tighter uppercase relative z-10">TRANSACÇÃO<br/><span className="text-green-500">CONCLUÍDA.</span></h2>
-                        <p className="text-2xl text-gray-400 max-w-2xl leading-relaxed mb-16 font-light relative z-10">
-                            Seu agendamento foi injetado com sucesso no ecossistema **Winf**. O comprovante digital e as instruções de acesso foram enviados para o seu terminal.
-                        </p>
-                        <div className="flex items-center gap-4 text-[10px] text-gray-600 font-black uppercase tracking-[0.5em] animate-pulse relative z-10">
-                            <span className="w-2 h-2 bg-green-500 rounded-full"></span> Resetando Terminal em 10 segundos...
-                        </div>
-                    </div>
-                )}
-
+            
+            <div className="flex items-center gap-4 text-xs font-bold text-blue-400 uppercase tracking-[0.4em] relative z-10 border border-blue-500/20 bg-blue-500/5 px-6 py-3 rounded-full">
+              <Activity size={16} className="animate-pulse" />
+              Sistema Encerrando
             </div>
-        </div>
-    );
+          </motion.div>
+        )}
+
+      </AnimatePresence>
+    </div>
+  );
 };
 
 export default ModuleKioskMode;

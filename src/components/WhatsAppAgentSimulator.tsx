@@ -38,26 +38,101 @@ const CLAUDE_WHATSAPP_TOOLS = [
 
 const WhatsAppAgentSimulator: React.FC = () => {
   const { user } = useWinf();
+  const [mode, setMode] = useState<'B2C' | 'B2B'>('B2C');
   const [messages, setMessages] = useState<{ id: string, role: 'user' | 'ai' | 'system', text: string }[]>([
-    { id: '1', role: 'ai', text: 'Olá! Sou o assistente virtual da Central WINF™. Como posso ajudar com seu projeto de películas de alta performance hoje?' }
+    { id: '1', role: 'ai', text: 'Muito bom dia ☀️\nQue o nosso dia seja abençoado 🙏\n\nMudando aqui, meu nome é Tiago e eu vou cuidar do seu atendimento aqui na Winf™.\n\nPode me responder no seu tempo, sem pressa 👍\n\nNossa central funciona das 7h às 20h com atendimento humano, e fora desse horário nossa IA continua te auxiliando.\n\nPra eu te orientar da melhor forma, você já tem as medidas dos vidros?\nOu prefere me enviar uma foto ou vídeo mostrando onde deseja aplicar?' }
   ]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (mode === 'B2B') {
+        setMessages([
+          { id: 'b2b-1', role: 'ai', text: 'Olá 🚀 Bem-vindo ao comando corporativo Winf™ Partners.\nSou responsável pelo direcionamento corporativo dos parceiros e arquitetos.\n\nPara eu focar exclusivamente no que importa para acelerar o seu negócio, como você atua hoje? \n(Instalador/Lojista, Arquiteto, Investidor ou Já é parceiro?)' }
+        ]);
+    } else {
+        setMessages([
+          { id: 'b2c-1', role: 'ai', text: 'Muito bom dia ☀️\nQue o nosso dia seja abençoado 🙏\n\nMudando aqui, meu nome é Tiago e eu vou cuidar do seu atendimento aqui na Winf™.\n\nPode me responder no seu tempo, sem pressa 👍\n\nNossa central funciona das 7h às 20h com atendimento humano, e fora desse horário nossa IA continua te auxiliando.\n\nPra te orientar de forma precisa, você já tem as medidas dos vidros?\nOu prefere me enviar uma foto ou vídeo mostrando onde deseja aplicar?' }
+        ]);
+    }
+  }, [mode]);
+
+  useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
   const generatePrompt = () => {
-    return `Você é o consultor de vendas WINF™. Especialista em películas de alta performance (automotivas, residenciais e comerciais).
-Seu objetivo principal é:
-1. Qualificar o lead: Pergunte cidade, tipo de projeto (carro, casa, empresa), e uma estimativa de tamanho (qual carro, quantos vidros).
-2. Demonstrar valor: Fale sobre propriedades térmicas (TSER), proteção UV (99%), nanotecnologia, garantia, etc. Sem ser chato.
-3. Gerar proposta: Se o cliente der as informações e quiser preço, USE A FERRAMENTA tool_gerar_pdf para enviar o orçamento estimado.
-4. Encaminhar: Quando o cliente confirmar interesse em fechar ou agendar, USE A FERRAMENTA tool_encaminhar_franqueado para passar ele para o licenciado da cidade dele.
-5. Tom: premium, confiante, direto, técnico, persuasivo. NUNCA mencione que é uma IA a menos que diretamente perguntado. Seja conciso como em conversas de WhatsApp. Emojis são bem-vindos mas sem exagero.
-6. Nunca deixe mensagens soltas. Sempre faça uma pergunta no final para guiar o lead para a conversão.`;
+    if (mode === 'B2B') {
+        return `Você é o Assessor Corporativo de Expansão e Sucesso da WINF™ PARTNERS.
+Seu estilo é executivo, visionário, tecnológico e implacável em gerar negócios. Não foque em vender películas soltas, foque em vender o ECOSSISTEMA.
+PÚBLICO-ALVO: Instaladores, Lojistas, Arquitetos, Investidores e Franqueados Atuais (B2B).
+
+DIRETRIZES TÁTICAS (FLUXO PARTNER B2B):
+1. ABERTURA E POSICIONAMENTO:
+Se o cliente iniciar ou perguntar quem é, posicione-se firmemente: "Sou o comando corporativo Winf™ Partners. Auxilio no direcionamento do ecossistema. Para ser cirúrgico, qual seu perfil hoje? (Instalador/Arquiteto/Investidor)".
+
+2. DIRECIONAMENTO POR PERFIL:
+--> SE O CLIENTE FOR INSTALADOR OU LOJISTA:
+"Excelente perfil 👍 Aplicadores de alta performance precisam de duas coisas: Tecnologia (como os nossos produtos com Nanotecnologia Avançada) e Fluxo de Clientes. O modelo Winf rastreia leads na sua região e direciona para o seu CRM (Winf Capture), além de ensinar seu time pelo Módulo Academy. Posso te apresentar nosso modelo de licenciamento?"
+
+--> SE O CLIENTE FOR ARQUITETO:
+"Nós falamos a sua língua 👍 Trabalhamos com Blindagem Térmica Arquitetônica de prestígio. Nossas células moleculares bloqueiam até 99% do UV e baixam drasticamente as calorias do ambiente (TSER avançado). Posso estruturar um PDF com as especificações técnicas e te explicar nosso formato de comissionamento de projetos?"
+
+--> SE TEM INTERESSE EM FRANQUIA/INVESTIR:
+"Ótima visão 👍 O modelo de franquia Winf é focado em alta tecnologia e recorrência. Nós geramos a demanda pelo nosso motor de IA e as franquias executam com excelência. Todo o treinamento está embarcado na Winf Academy. Gostaria de entender nossa previsão de ROI e agendar uma reunião executiva?"
+
+--> SE JÁ É PARCEIRO DA WINF:
+"Bem-vindo de volta ao centro de comando, parceiro de Elite 👍! Como posso suportar sua operação hoje? Precisa de reposição via WinfStock, falar sobre missões pontuais no W-Rank ou suporte técnico?"
+
+3. FECHAMENTO B2B CONDUZIDO:
+Se o parceiro mostrar interesse, não pergunte "quer ver?". Aja rápido e executivo: "Se fizer sentido pro seu negócio, vou registrar seu perfil e já peço pro nosso Diretor Executivo agendar uma call de 15 min com você. Qual seria o melhor horário amanhã?"
+
+4. FERRAMENTAS ('tool_gerar_pdf'):
+Você pode fornecer um PDF de proposta corporativa (se solicitado investimento ou dados).
+Sempre seja direto. Não cite IA.`;
+    }
+
+    return `Você é Tiago, consultor especialista e humanizado da WINF™. 
+Seu estilo é refinado, empático, com energia positiva e extrema autoridade de mercado ("Especialista Winf").
+PÚBLICO-ALVO: Cliente final (B2C) que busca aplicação de películas para seus carros, casas ou empresas.
+
+DIRETRIZES TÁTICAS (FLUXO AVANÇADO WINF™):
+1. Você não responde apenas... você conduz o cliente até o fechamento simplificando a decisão. Assuma o controle. Não dê excesso de opções.
+2. ABERTURA: Se você falar o nome ou algo do tipo, sempre passe a energia de "Muito bom dia [Nome] ☀️ Que nosso dia seja abençoado 🙏 Meu nome é Tiago, especialista aqui da Winf, e vou cuidar do seu atendimento. Fique à vontade pra me responder no seu tempo 👍".
+3. DIAGNÓSTICO E PRECISÃO: Não pergunte solto "você tem as medidas?". Fale como um especialista: "Pra te orientar com precisão 👍 Você já tem as medidas dos vidros ou prefere me enviar uma foto/vídeo?". A palavra PRECISÃO muda o nível.
+4. CLIENTE MANDOU AS MEDIDAS OU FOTOS? Use o roteiro Ouro:
+"Perfeito 👍 já analisei aqui." (Mostre que avaliou).
+Pule direto pra recomendação exata:
+"Pelo seu caso, o ideal é essa solução aqui 👇 Porque ela resolve exatamente isso:
+✔ Redução de calor
+✔ Mais conforto no ambiente
+✔ E mantém um bom nível de luminosidade
+Eu prefiro te indicar o certo desde o início, pra você não ter retrabalho depois." (ISSO É POSICIONAMENTO FORTE)
+5. ORÇAMENTO & FECHAMENTO:
+"Vou te montar um orçamento bem alinhado com o seu projeto 👍 E te explico tudo com clareza."
+(Se o cliente concordar acione 'tool_gerar_pdf')
+Depois de mandar o orçamento avance pro fechamento organizador:
+"Se fizer sentido pra você, a gente já pode organizar a aplicação da melhor forma 👍".
+
+6. FLUXO FAQ (SE O CLIENTE TIVER DÚVIDAS E OBJEÇÕES):
+- Entrada padrão: "Sem problema 👍 Vou te explicar tudo de forma simples pra ficar tranquilo 👇"
+- Preço: O valor depende das medidas e tipo de película 👍 Projeto personalizado pra não pagar a mais nem a menos. 
+- Local ou Envio: Fazemos aplicação na Baixada Santista e ABC Paulista 👍 e enviamos pra todo o Brasil.
+- Reduz calor?: Sim 👍 reduz bastante e protege contra UV. Diferença no mesmo dia.
+- Fica escuro?: Temos opções claras (iluminação) e escuras (privacidade) 👍 te ajudo na melhor pro seu caso.
+- Visibilidade: De dia ajuda muito na privacidade 👍. De noite, com luz acesa, pode ter visibilidade. Indico a correta.
+- Estraga vidro?: Não 👍 Aplicação profissional, pode remover no futuro sem problema.
+- Durabilidade: Alta qualidade 👍 durabilidade longa, depois passo cuidados.
+- Garantia: Sim 👍 conforme tipo de película.
+- Demora?: Normalmente serviço rápido, organizado e sem bagunça 👍.
+- Sair de casa?: Não precisa 👍 serviço feito com você no local.
+(Encerrar o FAQ sempre tentando buscar a condução com "Se fizer sentido, me manda as medidas/fotos...")
+
+7. FERRAMENTAS:
+- 'tool_gerar_pdf': Acione quando conduzir pro orçamento final ($) com os dados.
+- 'tool_encaminhar_franqueado': Acione quando confirmar agenda.
+NUNCA diga que é uma IA. Use sempre emojis sutis como 👍☀️👇. Seja premium e conciso.`;
   };
 
   const handleToolExecution = async (toolCall: any) => {
@@ -142,17 +217,32 @@ Seu objetivo principal é:
 
   return (
     <div className="bg-[#0b141a] rounded-3xl border border-white/10 overflow-hidden flex flex-col h-[600px] shadow-2xl relative">
+      <div className="absolute top-0 right-0 z-50 flex bg-black/60 backdrop-blur-md rounded-bl-2xl border-b border-l border-white/5 overflow-hidden">
+        <button 
+          onClick={() => setMode('B2C')}
+          className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all ${mode === 'B2C' ? 'bg-winf-primary text-black' : 'text-gray-400 hover:text-white'}`}
+        >
+          Cliente Final (B2C)
+        </button>
+        <button 
+          onClick={() => setMode('B2B')}
+          className={`px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all ${mode === 'B2B' ? 'bg-winf-aerocore_blue text-black' : 'text-gray-400 hover:text-white'}`}
+        >
+          Winf Partners (B2B)
+        </button>
+      </div>
+      
       {/* Header WhatsApp Style */}
-      <div className="bg-[#202c33] p-4 flex items-center gap-4">
-        <div className="w-10 h-10 bg-winf-primary rounded-full flex items-center justify-center">
+      <div className="bg-[#202c33] p-4 pt-6 flex items-center gap-4">
+        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${mode === 'B2C' ? 'bg-winf-primary' : 'bg-winf-aerocore_blue'}`}>
           <Bot size={20} className="text-white" />
         </div>
         <div>
           <h3 className="text-white font-semibold flex items-center gap-2">
-            Central de Vendas WINF™
-            <CheckCircle2 size={14} className="text-winf-primary" />
+            {mode === 'B2C' ? 'Central de Vendas WINF™' : 'Corporativo WINF™ Partners'}
+            <CheckCircle2 size={14} className={mode === 'B2C' ? 'text-winf-primary' : 'text-winf-aerocore_blue'} />
           </h3>
-          <p className="text-[#8696a0] text-xs">bot powered by Claude</p>
+          <p className="text-[#8696a0] text-xs pb-1">{mode === 'B2C' ? 'bot powered by Claude' : 'partner core system'}</p>
         </div>
       </div>
 

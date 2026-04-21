@@ -1,6 +1,4 @@
 
-import { Database } from './types_dir/database.types';
-
 export interface ParadoxAnalysis {
   verdade: string;
   risco: string;
@@ -60,6 +58,8 @@ export enum ViewState {
   MODULE_WARRANTIES = 'MODULE_WARRANTIES',
   CERTIFICATE_VIEWER = 'CERTIFICATE_VIEWER',
   PRODUCTS_CATALOG = 'PRODUCTS_CATALOG',
+  PRODUCT_LANDING = 'PRODUCT_LANDING',
+  MODULE_BLACKSHOP = 'MODULE_BLACKSHOP',
   MODULE_CORE_AI = 'MODULE_CORE_AI',
   MODULE_WINF_BRAIN = 'MODULE_WINF_BRAIN',
   MODULE_WINF_WORLD = 'MODULE_WINF_WORLD',
@@ -79,8 +79,10 @@ export enum ViewState {
   LANDING_LICENCIAMENTO = 'LANDING_LICENCIAMENTO',
   LANDING_KIOSK = 'LANDING_KIOSK',
   LANDING_STUDIO = 'LANDING_STUDIO',
+  LANDING_AEROCORE = 'LANDING_AEROCORE',
   LANDING_BIOMETRIC = 'LANDING_BIOMETRIC',
   LANDING_UNIVERSO_DARK = 'LANDING_UNIVERSO_DARK',
+  LANDING_WINF_SELECT_ELITE = 'LANDING_WINF_SELECT_ELITE',
   ABOUT_US = 'ABOUT_US',
   ACCESS_FORM = 'ACCESS_FORM',
   ARCHITECT_REGISTRATION = 'ARCHITECT_REGISTRATION',
@@ -88,6 +90,8 @@ export enum ViewState {
   LOGIN = 'LOGIN',
   SEARCH = 'SEARCH',
   ADMIN_PANEL = 'ADMIN_PANEL',
+  MODULE_MOLECULAR_TWIN = 'MOLECULAR_TWIN',
+  CITY_ONE_PAGE = 'CITY_ONE_PAGE',
 }
 
 export type BusinessModel = 'STUDIO' | 'ONLINE' | 'KIOSK' | 'CORPORATE';
@@ -488,7 +492,6 @@ export interface WinfContextType {
   isLoading: boolean;
   
   login: (email: string, password: string) => Promise<{ success: boolean; error: string | null }>;
-  loginAsPrototype: () => Promise<void>;
   logout: () => Promise<void>;
   updateUserCoins: (amount: number, reason: string, xp?: number) => Promise<void>;
   gamify: (action: GamificationAction, details?: any) => void;
@@ -553,6 +556,7 @@ export interface WinfContextType {
   addInstallationJob: (job: any) => Promise<{ success: boolean; error: string | null }>;
   updateInstallationJob: (id: string, updates: any) => Promise<{ success: boolean; error: string | null }>;
   completeJobAndGenerateWarranty: (jobId: string) => Promise<{ success: boolean; warrantyId?: string; error: string | null }>;
+  fetchClaudeInsight: (prompt: string, context?: string) => Promise<string>;
 
   fetchTotalLeads: () => Promise<void>;
   fetchTotalMembers: () => Promise<void>;
@@ -561,6 +565,7 @@ export interface WinfContextType {
   fetchUserPerformanceMetrics: () => Promise<void>;
   fetchContentCalendarEvents: () => Promise<void>;
   addContentCalendarEvent: (event: any) => Promise<{ success: boolean; error: string | null }>;
+  loginAsPrototype: () => void;
 
   // Agent Control (Neural Bridge)
   agentState: AgentState;
@@ -581,6 +586,10 @@ export interface WinfContextType {
   agentInsights: AgentInsight[];
   fetchAgentInsights: () => Promise<void>;
   markInsightAsRead: (id: string) => Promise<{ success: boolean; error: string | null }>;
+  
+  // Favorites
+  favoriteModules: string[];
+  toggleFavoriteModule: (moduleId: string) => void;
 }
 
 export interface WhatsAppConfig {

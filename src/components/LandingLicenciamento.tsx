@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ShieldCheck, Award, Box, Zap, Globe, MessageCircle, CheckCircle, ArrowUpRight, TrendingUp, Cpu, Star, Rocket, Target, Diamond, Building2, Store, X, Activity, Crown, Lock, Scissors } from 'lucide-react';
+import { ChevronLeft, ShieldCheck, Award, Box, Zap, Globe, MessageCircle, CheckCircle, ArrowUpRight, TrendingUp, Cpu, Star, Rocket, Target, Diamond, Building2, Store, X, Activity, Crown, Lock, Scissors, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WINF_CONSTANTS } from '../constants';
 import ApplicationModal from './ApplicationModal';
+import { generateCommercialDeckPDF } from '../lib/pdfGenerator';
 
 interface LandingLicenciamentoProps {
   onBack: () => void;
@@ -68,6 +69,7 @@ const LandingLicenciamento: React.FC<LandingLicenciamentoProps> = ({ onBack, onN
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isAppModalOpen, setIsAppModalOpen] = useState(false);
   const [selectedTier, setSelectedTier] = useState('');
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const heroImages = [
     (WINF_CONSTANTS as any).assets.aerocoreForest,
@@ -92,49 +94,98 @@ const LandingLicenciamento: React.FC<LandingLicenciamentoProps> = ({ onBack, onN
     setIsAppModalOpen(true);
   };
 
+  const handleDownloadPdf = () => {
+    setIsGeneratingPdf(true);
+    setTimeout(() => {
+      generateCommercialDeckPDF();
+      setIsGeneratingPdf(false);
+    }, 1200);
+  };
+
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-white/30 overflow-x-hidden">
       
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-[80] border-b border-white/5 bg-[#050505]/80 backdrop-blur-xl h-20 md:h-24 flex items-center">
-        <div className="max-w-[1500px] mx-auto px-6 md:px-10 w-full flex justify-between items-center">
-          <div className="flex items-center gap-4 md:gap-10">
-            <button onClick={onBack} className="text-white/40 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"><ChevronLeft size={20} className="md:w-6 md:h-6" /></button>
-            <div className="flex items-center gap-2 md:gap-3 group cursor-pointer" onClick={() => { window.scrollTo(0,0); setIsMenuOpen(false); }}>
-                <span className="font-black tracking-tighter text-xl md:text-2xl uppercase">Winf™ PARTNERS</span>
-                <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+      {/* Navigation - System Command Bar */}
+      <nav className="fixed top-6 left-0 right-0 z-[80] transition-all duration-500 flex justify-center px-4">
+        <div className={`relative w-full max-w-[1400px] border border-white/5 rounded-[32px] overflow-hidden transition-all duration-700 ${isMenuOpen ? 'bg-[#050505] h-[85vh]' : 'bg-[#050505]/80 backdrop-blur-2xl h-16 md:h-20 shadow-[0_20px_40px_rgba(0,0,0,0.5)]'}`}>
+          <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none"></div>
+          
+          <div className="relative h-16 md:h-20 px-4 md:px-10 w-full flex justify-between items-center z-10">
+            <div className="flex items-center gap-2 md:gap-8 shrink-0">
+              <button 
+                onClick={onBack} 
+                className="text-zinc-500 hover:text-white transition-colors p-1.5 md:p-2 hover:bg-white/5 rounded-full"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <div className="flex items-center gap-2 group cursor-pointer" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setIsMenuOpen(false); }}>
+                  <span className="font-black tracking-tighter text-base md:text-xl uppercase italic shrink-0">WINF™</span>
+                  <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-white/10 bg-white/5">
+                    <div className="w-1 h-1 bg-white rounded-full animate-pulse"></div>
+                    <span className="text-[7px] font-black text-white/40 uppercase tracking-widest hidden md:block">LICENCIAMENTO</span>
+                  </div>
+              </div>
+            </div>
+            
+            <div className="hidden lg:flex items-center gap-12 text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">
+              <button onClick={() => { onBack(); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">A Marca</button>
+              <button className="text-white">Licenciamentos</button>
+              <button onClick={onNavigateToKiosk} className="hover:text-white transition-colors">Kiosks</button>
+              <button onClick={onNavigateToStudio} className="hover:text-white transition-colors">Franquias</button>
+            </div>
+
+            <div className="flex items-center gap-2 md:gap-4 shrink-0">
+              <button onClick={() => handleCtaClick('PORTAL')} className="hidden sm:block bg-white text-black px-6 md:px-8 py-2 md:py-2.5 rounded-full text-[9px] font-black uppercase tracking-[0.4em] hover:bg-white/90 transition-all">
+                Portal
+              </button>
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="w-9 h-9 md:w-10 md:h-10 flex flex-col items-center justify-center gap-1 md:gap-1.5 rounded-full bg-white/5 border border-white/10 lg:hidden"
+              >
+                <motion.div 
+                  animate={isMenuOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
+                  className="w-4 md:w-5 h-0.5 bg-white origin-center transition-all"
+                />
+                <motion.div 
+                  animate={isMenuOpen ? { opacity: 0 } : { opacity: 1 }}
+                  className="w-4 md:w-5 h-0.5 bg-white transition-all"
+                />
+                <motion.div 
+                  animate={isMenuOpen ? { rotate: -45, y: -6 } : { rotate: 0, y: 0 }}
+                  className="w-4 md:w-5 h-0.5 bg-white origin-center transition-all"
+                />
+              </button>
             </div>
           </div>
-          
-          <div className="hidden lg:flex items-center gap-12 text-[9px] font-bold uppercase tracking-[0.4em] text-white/40">
-            <button className="hover:text-white transition-colors">A Marca</button>
-            <button className="hover:text-white transition-colors">Licenciamentos</button>
-            <button onClick={onNavigateToKiosk} className="hover:text-white transition-colors">Kiosks</button>
-            <button onClick={onNavigateToStudio} className="hover:text-white transition-colors">Franquias</button>
-          </div>
 
-          <div className="flex items-center gap-4">
-            <button onClick={() => handleCtaClick('PORTAL')} className="hidden sm:block bg-white text-black px-6 md:px-8 py-2.5 md:py-3 rounded-full text-[9px] font-bold uppercase tracking-[0.4em] hover:bg-white/90 transition-all">
-              Portal
-            </button>
-            <button 
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 text-white/60 hover:text-white transition-colors"
-            >
-              {isMenuOpen ? <X size={24} /> : <Activity size={24} className="rotate-90" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu Overlay */}
-        <div className={`fixed inset-0 z-[70] bg-[#050505] transition-all duration-500 lg:hidden ${isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-          <div className="flex flex-col items-center justify-center h-full gap-8 text-[12px] font-bold uppercase tracking-[0.5em] text-white/60">
-            <button onClick={() => setIsMenuOpen(false)} className="hover:text-white transition-colors">A Marca</button>
-            <button onClick={() => setIsMenuOpen(false)} className="hover:text-white transition-colors">Licenciamentos</button>
-            <button onClick={() => { onNavigateToKiosk?.(); setIsMenuOpen(false); }} className="hover:text-white transition-colors">Kiosks</button>
-            <button onClick={() => { onNavigateToStudio?.(); setIsMenuOpen(false); }} className="hover:text-white transition-colors">Franquias</button>
-            <button onClick={() => { handleCtaClick('PORTAL'); setIsMenuOpen(false); }} className="mt-4 bg-white text-black px-10 py-4 rounded-full text-[10px] font-bold uppercase tracking-[0.4em]">Portal do Parceiro</button>
-          </div>
+          <AnimatePresence>
+            {isMenuOpen && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 pt-20 flex flex-col p-6 bg-black z-[60]"
+              >
+                <div className="flex-1 flex flex-col gap-4 overflow-y-auto no-scrollbar py-4">
+                  {[
+                    { name: 'A Marca', onClick: () => { onBack(); setIsMenuOpen(false); } },
+                    { name: 'Licenciamentos', active: true },
+                    { name: 'Kiosks', onClick: () => { onNavigateToKiosk?.(); setIsMenuOpen(false); } },
+                    { name: 'Franquias', onClick: () => { onNavigateToStudio?.(); setIsMenuOpen(false); } }
+                  ].map((item, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => { if(item.onClick) item.onClick(); else setIsMenuOpen(false); }}
+                      className={`text-2xl md:text-4xl font-black uppercase tracking-tighter text-left py-4 border-b border-white/5 ${item.active ? 'text-white italic' : 'text-zinc-700 hover:text-white transition-colors'}`}
+                    >
+                      {item.name}
+                    </button>
+                  ))}
+                  <button onClick={() => { handleCtaClick('PORTAL'); setIsMenuOpen(false); }} className="mt-8 bg-white text-black px-10 py-5 rounded-full text-xs font-black uppercase tracking-widest text-center">Portal do Parceiro</button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </nav>
 
@@ -167,11 +218,23 @@ const LandingLicenciamento: React.FC<LandingLicenciamentoProps> = ({ onBack, onN
               Seja você um aplicador de elite, arquiteto visionário ou investidor estratégico, a Winf™ PARTNERS oferece a infraestrutura tecnológica para você dominar o mercado de proteção térmica.
            </p>
            <div className="flex flex-col sm:flex-row gap-4 md:gap-6 items-center w-full sm:w-auto">
-             <button onClick={() => window.scrollTo({ top: document.getElementById('plans')?.offsetTop, behavior: 'smooth' })} className="w-full sm:w-auto bg-white text-black px-10 py-4 rounded-full text-[9px] font-black uppercase tracking-[0.4em] hover:bg-white/90 transition-all text-center shadow-[0_0_40px_rgba(255,255,255,0.2)]">
+             <button onClick={() => window.scrollTo({ top: document.getElementById('plans')?.offsetTop, behavior: 'smooth' })} className="w-full sm:w-auto bg-white text-black px-10 py-5 rounded-full text-[9px] md:text-sm font-black uppercase tracking-[0.4em] hover:bg-white/90 transition-all text-center shadow-[0_0_40px_rgba(255,255,255,0.2)]">
                 Explorar Licenciamentos
              </button>
-             <button onClick={() => handleCtaClick('CONSULTORIA')} className="w-full sm:w-auto border border-white/10 text-white px-10 py-4 rounded-full text-[9px] font-black uppercase tracking-[0.4em] hover:bg-white/5 transition-all text-center">
-                Falar com Especialista
+             <button 
+                onClick={handleDownloadPdf}
+                disabled={isGeneratingPdf}
+                className={`w-full sm:w-auto border text-white px-10 py-5 rounded-full text-[9px] md:text-sm font-black uppercase tracking-[0.4em] transition-all text-center flex justify-center items-center gap-3 ${
+                    isGeneratingPdf 
+                    ? 'border-white/10 bg-white/5 text-gray-400 cursor-wait'
+                    : 'border-white/30 hover:bg-white hover:text-black'
+                }`}
+             >
+                {isGeneratingPdf ? (
+                    <><div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div> GERANDO PDF...</>
+                ) : (
+                    <><Download size={16} /> BAIXAR PROSPECTO</>
+                )}
              </button>
            </div>
         </div>

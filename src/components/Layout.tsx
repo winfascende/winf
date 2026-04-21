@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { 
   LayoutDashboard, 
+  Search,
   Grid, 
   Star, 
   Coins, 
@@ -15,8 +16,10 @@ import {
 } from 'lucide-react';
 import { ViewState } from '../types';
 import { useWinf } from '../contexts/WinfContext';
+import { getAllModules } from '../config/modules';
 import AgentAutomationsEngine from './AgentAutomationsEngine';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect } from 'react';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -39,9 +42,23 @@ const Layout: React.FC<LayoutProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isInsightsOpen, setIsInsightsOpen] = useState(false);
-  const { agentInsights, markInsightAsRead } = useWinf();
+  const { agentInsights, markInsightAsRead, favoriteModules } = useWinf();
+
+  const allModules = getAllModules();
+  const favoriteItems = allModules.filter(m => favoriteModules?.includes(m.id) || false);
 
   const unreadInsights = agentInsights?.filter(i => !i.is_read) || [];
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        onChangeView(ViewState.SEARCH);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onChangeView]);
 
   const navItems = [
     { id: ViewState.DASHBOARD_WINF, label: 'Dashboard', icon: LayoutDashboard },
@@ -101,6 +118,30 @@ const Layout: React.FC<LayoutProps> = ({
               </button>
             );
           })}
+
+          {/* Favoritos Section */}
+          {favoriteItems.length > 0 && (
+            <div className="pt-6 space-y-2">
+              <div className="flex items-center gap-2 px-4 mb-2">
+                <Star size={10} className="text-yellow-500 fill-yellow-500" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-winf-text_muted">Favoritos</span>
+              </div>
+              {favoriteItems.map((module) => (
+                <button
+                  key={module.id}
+                  onClick={() => handleNavClick(module.viewState)}
+                  className={`w-full flex items-center gap-3 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                    currentView === module.viewState 
+                      ? 'bg-winf-primary/5 text-winf-text_primary border-winf-primary/20' 
+                      : 'text-winf-text_muted hover:bg-white/5 hover:text-white border-transparent'
+                  }`}
+                >
+                  <module.icon size={14} strokeWidth={1.5} />
+                  <span className="truncate">{module.title}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </nav>
 
         {/* User Area */}
@@ -151,6 +192,19 @@ const Layout: React.FC<LayoutProps> = ({
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Search Toggle */}
+            <button 
+              onClick={() => onChangeView(ViewState.SEARCH)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-winf-surface border border-winf-border rounded-full text-winf-text_muted hover:text-white transition-all group"
+              title="Busca Global (Ctrl+K)"
+            >
+              <Search size={14} className="group-hover:text-winf-primary transition-colors" />
+              <span className="text-[10px] font-bold uppercase tracking-wider hidden md:block">Buscar...</span>
+              <kbd className="hidden md:flex h-5 items-center gap-1 rounded border border-white/10 bg-white/5 px-1.5 font-mono text-[9px] font-medium opacity-100">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+            </button>
+
             {/* WinfCoin Balance */}
             <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-winf-surface border border-winf-border rounded-full">
               <Coins size={14} className="text-yellow-500" />

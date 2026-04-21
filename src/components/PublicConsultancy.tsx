@@ -34,7 +34,9 @@ import { GoogleGenAI } from "@google/genai";
 interface PublicConsultancyProps {
   partnerName?: string;
   partnerPhone?: string;
+  territory?: string;
   onBack?: () => void;
+  onAccessSystem?: () => void;
 }
 
 const LUXURY_IMAGES = [
@@ -46,6 +48,7 @@ const LUXURY_IMAGES = [
 const PublicConsultancy: React.FC<PublicConsultancyProps> = ({ 
   partnerName = "WINF™ Oficial", 
   partnerPhone = "5513999191510",
+  territory = "Santos (Sede)",
   onBack
 }) => {
   const [sunIntensity, setSunIntensity] = useState(85);
@@ -199,8 +202,8 @@ const PublicConsultancy: React.FC<PublicConsultancyProps> = ({
           </div>
           
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex flex-col items-end mr-4">
-              <span className="text-[8px] font-black text-white/40 uppercase tracking-[0.3em]">Consultoria por:</span>
+            <div className="hidden sm:flex flex-col items-end mr-4 bg-white/5 px-4 py-1.5 rounded-xl border border-white/5">
+              <span className="text-[7px] font-black text-winf-primary uppercase tracking-[0.3em]">{territory}</span>
               <span className="text-[10px] font-bold text-white uppercase tracking-widest">{partnerName}</span>
             </div>
             <button onClick={sendToWhatsApp} className="bg-white text-black px-6 py-2.5 rounded-full text-[9px] font-black uppercase tracking-[0.4em] hover:bg-white/90 transition-all">
@@ -292,19 +295,21 @@ const PublicConsultancy: React.FC<PublicConsultancyProps> = ({
                 O Estado da Arte em <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-white/50 to-white/20">Nanotecnologia.</span>
               </h2>
               <p className="text-white/60 text-base font-light leading-relaxed mb-10">
-                Nossas películas são desenvolvidas sob o conceito <strong className="text-white font-bold">Dark Factory</strong> — fábricas 100% automatizadas onde a precisão robótica substitui a intervenção humana, garantindo zero defeitos operacionais.
+                A união da engenharia global com o pioneirismo do <strong className="text-white font-bold">Brasil</strong>. Nossas películas são desenvolvidas em instalações de manufatura avançada, onde processos de extrema precisão e rigoroso controle de qualidade garantem performance térmica e durabilidade insuperáveis, sem espaço para falhas.
               </p>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div className="p-6 border border-white/5 rounded-2xl bg-white/[0.02]">
-                  <Globe2 className="text-winf-primary mb-4" size={24} />
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-white mb-2">Estados Unidos</h3>
-                  <p className="text-xs text-white/40 leading-relaxed">Origem das patentes, engenharia de materiais e polímeros de alta performance.</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                <div className="p-4 border border-white/5 rounded-2xl bg-white/[0.01] flex flex-col justify-center">
+                  <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-winf-primary mb-1">Brasil</h3>
+                  <p className="text-[10px] text-white/40 leading-relaxed">Fundador do sistema e detentor de ferramentas patenteadas de uso exclusivo.</p>
                 </div>
-                <div className="p-6 border border-white/5 rounded-2xl bg-white/[0.02]">
-                  <Factory className="text-winf-primary mb-4" size={24} />
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-white mb-2">China</h3>
-                  <p className="text-xs text-white/40 leading-relaxed">Manufatura de precisão em instalações Dark Factory de última geração.</p>
+                <div className="p-4 border border-white/5 rounded-2xl bg-white/[0.01] flex flex-col justify-center">
+                  <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60 mb-1">Estados Unidos</h3>
+                  <p className="text-[10px] text-white/40 leading-relaxed">Origem das patentes, engenharia de materiais e polímeros.</p>
+                </div>
+                <div className="p-4 border border-white/5 rounded-2xl bg-white/[0.01] flex flex-col justify-center">
+                  <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-white/60 mb-1">China</h3>
+                  <p className="text-[10px] text-white/40 leading-relaxed">Manufatura de alta precisão em instalações tecnológicas automatizadas.</p>
                 </div>
               </div>
             </div>
@@ -319,19 +324,19 @@ const PublicConsultancy: React.FC<PublicConsultancyProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-32 items-center">
             <div>
               <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-white/10 bg-transparent text-white/40 text-[9px] font-bold uppercase tracking-[0.4em] mb-8 lg:mb-10">
-                WINF™ THERMAL SHIELD SIMULATOR
+                SIMULADOR TÉRMICO WINF™
               </div>
               <h2 className="text-3xl lg:text-7xl font-black tracking-tighter leading-[0.9] mb-6 lg:mb-10 uppercase text-white">
-                Visualize a <span className="text-winf-primary italic">Eficiência</span> Molecular
+                Veja o calor <span className="text-winf-primary italic">Desaparecer.</span>
               </h2>
               <p className="text-white/60 text-base lg:text-xl font-light leading-relaxed mb-8 lg:mb-12 max-w-xl">
-                Ajuste a intensidade da radiação solar e compare em tempo real como a tecnologia WINF™ mantém o equilíbrio térmico enquanto películas comuns falham.
+                Arraste o medidor para aumentar a força do sol e veja, na prática, como a blindagem WINF™ mantém o seu ambiente fresco enquanto a película comum deixa todo o calor entrar.
               </p>
 
               <div className="space-y-8 md:space-y-12 bg-white/[0.02] p-6 md:p-10 rounded-[30px] md:rounded-[40px] border border-white/5">
                 <div className="space-y-6">
                   <div className="flex justify-between items-end">
-                    <label className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">Intensidade Solar (W/m²)</label>
+                    <label className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">Força do Sol (Calor Externo)</label>
                     <span className="text-2xl font-mono font-bold text-winf-primary">{sunIntensity * 10}</span>
                   </div>
                   <input 
@@ -346,15 +351,15 @@ const PublicConsultancy: React.FC<PublicConsultancyProps> = ({
 
                 <div className="grid grid-cols-2 gap-6 md:gap-10">
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3 text-red-500/60">
+                    <div className="flex items-center gap-3 text-orange-500/60">
                       <Thermometer size={16} />
                       <span className="text-[8px] md:text-[9px] font-black uppercase tracking-widest">Película Comum</span>
                     </div>
                     <div className="text-3xl md:text-4xl font-black tracking-tighter text-white">{commonTemp}°C</div>
-                    <div className="w-full h-1 bg-red-500/20 rounded-full overflow-hidden">
+                    <div className="w-full h-1 bg-orange-500/20 rounded-full overflow-hidden">
                       <motion.div 
                         animate={{ width: `${(commonTemp / 50) * 100}%` }}
-                        className="h-full bg-red-500"
+                        className="h-full bg-orange-500"
                       />
                     </div>
                   </div>
@@ -382,38 +387,41 @@ const PublicConsultancy: React.FC<PublicConsultancyProps> = ({
               {/* Heat Overlay */}
               <motion.div 
                 animate={{ opacity: sunIntensity / 100 * 0.6 }}
-                className="absolute inset-0 bg-gradient-to-t from-red-500/40 to-transparent mix-blend-overlay"
+                className="absolute inset-0 bg-gradient-to-t from-orange-500/30 to-transparent mix-blend-overlay"
               />
 
               {/* Glass Comparison */}
               <div className="absolute inset-0 flex">
-                <div className="w-1/2 h-full border-r border-white/20 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-red-500/10 backdrop-blur-[2px]"></div>
-                  <div className="absolute top-6 md:top-10 left-4 md:left-10 text-[8px] md:text-[10px] font-black uppercase tracking-[0.4em] text-white/40">ZONA_VULNERÁVEL</div>
+                <div className="w-1/2 h-full border-r-2 border-white/40 relative overflow-hidden">
+                  {/* Remove the annoying blur entirely to show clarity. Just add a slight red tint to represent heat getting through */}
+                  <div className="absolute inset-0 bg-orange-500/10"></div>
+                  <div className="absolute top-6 md:top-10 left-4 md:left-10 text-[8px] md:text-[10px] font-black uppercase tracking-[0.4em] text-white/60">SEM PROTEÇÃO</div>
                 </div>
                 <div className="w-1/2 h-full relative overflow-hidden">
-                  <div className="absolute inset-0 bg-winf-primary/5 backdrop-blur-[10px]"></div>
-                  <div className="absolute top-6 md:top-10 right-4 md:right-10 text-[8px] md:text-[10px] font-black uppercase tracking-[0.4em] text-winf-primary">ZONA_PROTEGIDA</div>
+                  {/* Premium clear look, dark cool tint, zero blur */}
+                  <div className="absolute inset-0 bg-[#0a0a0a]/20"></div>
+                  <div className="absolute top-6 md:top-10 right-4 md:right-10 text-[8px] md:text-[10px] font-black uppercase tracking-[0.4em] text-winf-primary">BLINDAGEM WINF™</div>
                   
                   {/* Scanning Line */}
                   <motion.div 
                     animate={{ top: ['-10%', '110%'] }}
                     transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                    className="absolute left-0 right-0 h-px bg-winf-primary/50 shadow-[0_0_20px_rgba(var(--winf-primary-rgb),0.5)]"
+                    className="absolute left-0 right-0 h-px bg-winf-primary/80 shadow-[0_0_15px_rgba(var(--winf-primary-rgb),0.8)]"
                   />
                 </div>
               </div>
 
-              <div className="absolute bottom-6 md:bottom-12 left-1/2 -translate-x-1/2 w-[90%] md:w-auto px-4 md:px-8 py-3 md:py-4 bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl">
-                <div className="flex items-center justify-center gap-4 md:gap-6">
-                  <div className="text-center">
-                    <div className="text-[7px] md:text-[8px] font-black text-white/40 uppercase tracking-widest mb-1">Redução IR</div>
-                    <div className="text-lg md:text-xl font-black text-white">99.9%</div>
+              {/* Mobile-friendly bottom stats card */}
+              <div className="absolute bottom-6 md:bottom-12 w-[90%] md:w-auto left-1/2 -translate-x-1/2 px-4 md:px-8 py-3 md:py-4 bg-[#0a0a0a]/90 backdrop-blur-md border border-white/10 rounded-[20px] shadow-2xl">
+                <div className="flex items-center justify-center gap-4 md:gap-8 min-w-[200px]">
+                  <div className="text-center w-1/2 md:w-auto">
+                    <div className="text-[7px] md:text-[8px] font-black text-white/50 uppercase tracking-widest mb-1">Redução IR</div>
+                    <div className="text-sm md:text-xl font-black text-white">99.9%</div>
                   </div>
-                  <div className="w-px h-8 bg-white/10"></div>
-                  <div className="text-center">
-                    <div className="text-[7px] md:text-[8px] font-black text-white/40 uppercase tracking-widest mb-1">Bloqueio UV</div>
-                    <div className="text-lg md:text-xl font-black text-white">100%</div>
+                  <div className="w-px h-8 bg-white/20"></div>
+                  <div className="text-center w-1/2 md:w-auto">
+                    <div className="text-[7px] md:text-[8px] font-black text-white/50 uppercase tracking-widest mb-1">Bloqueio UV</div>
+                    <div className="text-sm md:text-xl font-black text-white">100%</div>
                   </div>
                 </div>
               </div>
@@ -565,7 +573,7 @@ const PublicConsultancy: React.FC<PublicConsultancyProps> = ({
                 <div className="w-px h-10 bg-white/10"></div>
                 <div className="text-center">
                   <div className="text-3xl font-black text-white">100%</div>
-                  <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40 mt-1">Dark Factory</div>
+                  <div className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/40 mt-1">Manufatura Avançada</div>
                 </div>
               </div>
             </div>
@@ -649,7 +657,7 @@ const PublicConsultancy: React.FC<PublicConsultancyProps> = ({
 
           <div className="pt-10 flex flex-col md:flex-row justify-between items-center gap-6">
             <p className="text-[9px] font-bold uppercase tracking-[0.4em] text-white/20 text-center md:text-left">
-              © {new Date().getFullYear()} WINF™ DIGITAL CONSULTANCY // {partnerName}
+              © {new Date().getFullYear()} WINF™ DIGITAL CONSULTANCY // {territory} // {partnerName}
             </p>
             <div className="flex items-center gap-6 text-[9px] font-bold uppercase tracking-[0.4em] text-white/20">
               <a href="#" className="hover:text-white/60 transition-colors">Termos de Uso</a>

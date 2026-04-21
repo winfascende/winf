@@ -2,13 +2,17 @@ export const WINF_CONSTANTS = {
   header: {
     logo: "Winf™ PARTNERS",
     nav: [
-      { name: "Tecnologia", id: "tecnologia" },
-      { name: "Produtos", id: "produtos" },
-      { name: "Rede WINF", id: "rede" },
-      { name: "Arquitetos", id: "arquitetos" },
-      { name: "Contato", id: "contato" }
+      { name: "A Marca", id: "tecnologia" },
+      { name: "Sobre Nós", id: "founders" },
+      { name: "Catálogo", id: "produtos" },
+      { name: "Licenciamento", id: "licenciamento" },
+      { name: "Kiosks", id: "kiosks" },
+      { name: "Franquias", id: "franquias" },
+      { name: "AEROCORE™", id: "aerocore" },
+      { name: "Galeria", id: "galeria" },
+      { name: "Visão do Cliente", id: "jornada" }
     ],
-    cta: "Consultoria Técnica"
+    cta: "Conectar"
   },
   hero: {
     badge: "ENGENHARIA DE MATERIAIS",
@@ -78,7 +82,13 @@ export const WINF_CONSTANTS = {
     aerocoreForest: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=2072",
     aerocoreStudio: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=2072",
     aerocoreMulti: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=2072",
-    kiosk: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=2072",
+    kiosk: "https://ais-dev-anyipu6frxrchbbrdewq5p-28869965299.us-west1.run.app/api/attachments/8mbt_b_f",
+    kioskArchitecture: "https://ais-dev-anyipu6frxrchbbrdewq5p-28869965299.us-west1.run.app/api/attachments/x8n9t7c_",
+    kioskImmersive: "https://ais-dev-anyipu6frxrchbbrdewq5p-28869965299.us-west1.run.app/api/attachments/pqt7x_8m",
+    kioskVR: "https://ais-dev-anyipu6frxrchbbrdew?oqp5p-28869965299.us-west1.run.app/api/attachments/8mqt_x9t",
+    kioskPackaging: "https://ais-dev-anyipu6frxrchbbrdewq5p-28869965299.us-west1.run.app/api/attachments/pxt78m_c",
+    beforeAfter01: "https://ais-dev-anyipu6frxrchbbrdewq5p-28869965299.us-west1.run.app/api/attachments/x7n9t8_m",
+    beforeAfter02: "https://ais-dev-anyipu6frxrchbbrdewq5p-28869965299.us-west1.run.app/api/attachments/8mxt9n_z",
     studio: "https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&q=80&w=2072",
     porsche: "https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&q=80&w=2070",
     architects: "https://images.unsplash.com/photo-1600880212319-7837e5bb0a9c?auto=format&fit=crop&q=80&w=2070",
@@ -118,13 +128,13 @@ export const WINF_CONSTANTS = {
   portfolio: {
     badge: "THE LINEUP",
     title: "Sistemas de Proteção",
-    subtitle: "Arquitetura de alto rendimento para vidros, superfícies e mobilidade.",
+    subtitle: "De raízes brasileiras para uma presença global. Forjamos o futuro da proteção molecular unindo a precisão da engenharia Americana da linha Select™ aos avanços disruptivos das linhas AeroCore™, NeoSkin™ e Glass+ Home.",
     lines: [
       {
         id: "select",
         name: "Winf Select™",
-        context: "Glass + Home / Arquitetura",
-        desc: "A elite da proteção para arquitetura residencial e corporativa. Foco em transparência e rejeição térmica extrema.",
+        context: "Tecnologia Americana / Glass + Home",
+        desc: "A elite da proteção para arquitetura residencial e corporativa. Design e engenharia americana focados em transparência e rejeição térmica extrema.",
         items: [
           { 
             id: "invisible",
@@ -163,8 +173,8 @@ export const WINF_CONSTANTS = {
       {
         id: "aerocore-mobile",
         name: "AeroCore™ MOBILE",
-        context: "Automotive Premium",
-        desc: "Proteção automotiva de última geração com tecnologia molecular.",
+        context: "Engenharia Chinesa / Automotive Premium",
+        desc: "Proteção automotiva de última geração com tecnologia molecular e engenharia chinesa de alta performance.",
         items: [
           { id: "shadow-carbon", name: "ShadowCarbon (NanoCarbon)", desc: "Proteção solar com tecnologia nanocarbon.", specs: ["99% UV", "Garantia Vitalícia"], target: "Automotivo Premium" },
           { id: "molecular-shield", name: "MolecularShield (NanoCeramic)", desc: "Proteção nanocerâmica para veículos de luxo.", specs: ["99% UV", "Máximo IR"], target: "Automotivo Elite" },
@@ -175,7 +185,7 @@ export const WINF_CONSTANTS = {
       {
         id: "aerocore-air",
         name: "AeroCore™ AIR",
-        context: "Aviation Protection",
+        context: "Engenharia Chinesa / Aviation Protection",
         isExclusive: true,
         lockMessage: "Acesso restrito a Membros Elite. Tecnologia de blindagem térmica para condições extremas de altitude.",
         desc: "Tecnologia desenvolvida para as condições extremas da aviação: GravityZero, StratoVision e SolarShield.",
@@ -189,7 +199,7 @@ export const WINF_CONSTANTS = {
       {
         id: "aerocore-marine",
         name: "AeroCore™ MARINE",
-        context: "Nautical Protection",
+        context: "Engenharia Chinesa / Nautical Protection",
         isExclusive: true,
         lockMessage: "Acesso restrito a Membros Elite. Proteção contra salinidade e radiação marítima.",
         desc: "Linha náutica: DeepMatte, AquaGuard e HorizonMirror. Proteção contra água salgada e umidade.",
@@ -203,8 +213,8 @@ export const WINF_CONSTANTS = {
       {
         id: "select-white",
         name: "Winf Select™ WHITE",
-        context: "Decorative / White Matter®",
-        desc: "Linha decorativa premium: jateada, branca, miniblin e venetian. Made in USA.",
+        context: "Tecnologia Americana / Decorative",
+        desc: "Linha decorativa premium: jateada, branca, miniblin e venetian. Engineered in USA.",
         items: [
           { 
             id: "white-matter",
@@ -283,9 +293,9 @@ export const WINF_CONSTANTS = {
         features: ["Gestão de Grandes Contas", "Logística Integrada", "Treinamento de Equipes"]
       },
       { 
-        name: "Kiosk Retail", 
-        desc: "Ponto de venda ágil em locais de alto fluxo para serviços rápidos e produtos Select™.",
-        features: ["Baixo Custo Operacional", "Alta Rotatividade", "Design Compacto"]
+        name: "Kiosk Architecture", 
+        desc: "Ponto de experiência imersiva (VR) focado em arquitetura de alto padrão e especificação Select™.",
+        features: ["Inclusivo & Imersivo", "Agendamento WINF OS", "Showroom de Embalagens"]
       },
       { 
         name: "Studio Master", 

@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { ChevronLeft, Zap, Store, Box, Smartphone, LayoutGrid, Award, CheckCircle, Play, Activity, ArrowUpRight, TrendingUp, ShieldCheck, Cpu, Monitor, Scissors, X, MessageSquare, Star, Lock } from 'lucide-react';
+import { ChevronLeft, Zap, Store, Box, Smartphone, LayoutGrid, Award, CheckCircle, Play, Activity, ArrowUpRight, TrendingUp, ShieldCheck, Cpu, Monitor, Scissors, X, MessageSquare, Star, Lock, Building2, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WINF_CONSTANTS } from '../constants';
 
@@ -12,6 +12,7 @@ interface LandingKioskProps {
 const LandingKiosk: React.FC<LandingKioskProps> = ({ onBack, onActivate }) => {
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [modalType, setModalType] = useState<'invite' | 'service'>('invite');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleCtaClick = (type: 'invite' | 'service' = 'invite') => {
     setModalType(type);
@@ -21,27 +22,87 @@ const LandingKiosk: React.FC<LandingKioskProps> = ({ onBack, onActivate }) => {
   return (
     <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-white/30 overflow-x-hidden">
       
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-[80] border-b border-white/5 bg-[#050505]/80 backdrop-blur-xl h-20 md:h-24 flex items-center">
-        <div className="max-w-[1500px] mx-auto px-6 md:px-10 w-full flex justify-between items-center">
-          <div className="flex items-center gap-4 md:gap-10">
-            <button onClick={onBack} className="text-white/40 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-full"><ChevronLeft size={20} className="md:w-6 md:h-6" /></button>
-            <div className="flex items-center gap-2 md:gap-3 group cursor-pointer" onClick={() => { window.scrollTo(0,0); }}>
-                <span className="font-black tracking-tighter text-xl md:text-2xl uppercase">Winf™ PARTNERS</span>
-                <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+      {/* Navigation - System Command Bar */}
+      <nav className="fixed top-6 left-0 right-0 z-[80] transition-all duration-500 flex justify-center px-4">
+        <div className={`relative w-full max-w-[1400px] border border-white/5 rounded-[32px] overflow-hidden transition-all duration-700 ${isMenuOpen ? 'bg-[#050505] h-[85vh]' : 'bg-[#050505]/80 backdrop-blur-2xl h-16 md:h-20 shadow-[0_20px_40px_rgba(0,0,0,0.5)]'}`}>
+          <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none"></div>
+          
+          <div className="relative h-16 md:h-20 px-4 md:px-10 w-full flex justify-between items-center z-10">
+            <div className="flex items-center gap-2 md:gap-8 shrink-0">
+              <button 
+                onClick={onBack} 
+                className="text-zinc-500 hover:text-white transition-colors p-1.5 md:p-2 hover:bg-white/5 rounded-full"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <div className="flex items-center gap-2 group cursor-pointer" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setIsMenuOpen(false); }}>
+                  <span className="font-black tracking-tighter text-base md:text-xl uppercase italic shrink-0">WINF™</span>
+                  <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-white/10 bg-white/5">
+                    <div className="w-1 h-1 bg-white rounded-full animate-pulse"></div>
+                    <span className="text-[7px] font-black text-white/40 uppercase tracking-widest hidden md:block">RETAIL MACHINE</span>
+                  </div>
+              </div>
+            </div>
+            
+            <div className="hidden lg:flex items-center gap-12 text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500">
+              <button onClick={() => { onBack(); window.scrollTo(0, 0); }} className="hover:text-white transition-colors">A Marca</button>
+              <button onClick={() => { onBack(); }} className="hover:text-white transition-colors">Licenciamentos</button>
+              <button className="text-white font-black">Kiosks</button>
+              <button className="hover:text-white transition-colors">Franquias</button>
+            </div>
+
+            <div className="flex items-center gap-2 md:gap-4 shrink-0">
+              <button onClick={() => handleCtaClick()} className="hidden sm:block bg-white text-black px-6 md:px-8 py-2 md:py-2.5 rounded-full text-[9px] font-black uppercase tracking-[0.4em] hover:bg-white/90 transition-all">
+                Portal
+              </button>
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className="w-9 h-9 md:w-10 md:h-10 flex flex-col items-center justify-center gap-1 md:gap-1.5 rounded-full bg-white/5 border border-white/10 lg:hidden"
+              >
+                <motion.div 
+                  animate={isMenuOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }}
+                  className="w-4 md:w-5 h-0.5 bg-white origin-center transition-all"
+                />
+                <motion.div 
+                  animate={isMenuOpen ? { opacity: 0 } : { opacity: 1 }}
+                  className="w-4 md:w-5 h-0.5 bg-white transition-all"
+                />
+                <motion.div 
+                  animate={isMenuOpen ? { rotate: -45, y: -6 } : { rotate: 0, y: 0 }}
+                  className="w-4 md:w-5 h-0.5 bg-white origin-center transition-all"
+                />
+              </button>
             </div>
           </div>
-          
-          <div className="hidden lg:flex items-center gap-12 text-[9px] font-bold uppercase tracking-[0.4em] text-white/40">
-            <button className="hover:text-white transition-colors">A Marca</button>
-            <button className="hover:text-white transition-colors">Licenciamentos</button>
-            <button className="hover:text-white transition-colors">Kiosks</button>
-            <button className="hover:text-white transition-colors">Franquias</button>
-          </div>
 
-          <button onClick={handleCtaClick} className="hidden sm:block bg-white text-black px-6 md:px-8 py-2.5 md:py-3 rounded-full text-[9px] font-bold uppercase tracking-[0.4em] hover:bg-white/90 transition-all">
-            Portal
-          </button>
+          <AnimatePresence>
+            {isMenuOpen && (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 pt-20 flex flex-col p-6 bg-black z-[60]"
+              >
+                <div className="flex-1 flex flex-col gap-4 overflow-y-auto no-scrollbar py-4">
+                  {[
+                    { name: 'A Marca', onClick: () => { onBack(); setIsMenuOpen(false); } },
+                    { name: 'Licenciamentos', onClick: () => { onBack(); setIsMenuOpen(false); } },
+                    { name: 'Kiosks', active: true },
+                    { name: 'Franquias', onClick: () => { setIsMenuOpen(false); } }
+                  ].map((item, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => { if(item.onClick) item.onClick(); else setIsMenuOpen(false); }}
+                      className={`text-2xl md:text-4xl font-black uppercase tracking-tighter text-left py-4 border-b border-white/5 ${item.active ? 'text-white italic' : 'text-zinc-700 hover:text-white transition-colors'}`}
+                    >
+                      {item.name}
+                    </button>
+                  ))}
+                  <button onClick={() => { handleCtaClick(); setIsMenuOpen(false); }} className="mt-8 bg-white text-black px-10 py-5 rounded-full text-xs font-black uppercase tracking-widest text-center">Portal do Parceiro</button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </nav>
 
@@ -49,84 +110,184 @@ const LandingKiosk: React.FC<LandingKioskProps> = ({ onBack, onActivate }) => {
       <header className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24">
         <div className="absolute inset-0 z-0">
            <div 
-             className="absolute inset-0 bg-cover bg-center grayscale opacity-30 contrast-125"
-             style={{ backgroundImage: `url(${(WINF_CONSTANTS as any).assets.kiosk})` }}
+             className="absolute inset-0 bg-cover bg-center grayscale opacity-40 contrast-125"
+             style={{ backgroundImage: `url(${(WINF_CONSTANTS as any).assets.kioskArchitecture})` }}
            />
-           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.4)_0%,#050505_100%)]"></div>
+           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.2)_0%,#050505_100%)]"></div>
            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/20 to-[#050505]"></div>
         </div>
         <div className="relative z-10 text-center max-w-5xl px-6 md:px-8 animate-fade-in flex flex-col items-center">
-           <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-amber-500/30 bg-amber-500/5 text-amber-500 text-[9px] font-bold uppercase tracking-[0.4em] mb-8 md:mb-12">
-              <ShieldCheck size={12} /> EXPANSÃO POR CONVITE • EXCLUSIVO ADVANCED
+           <div className="inline-flex items-center gap-3 px-6 py-2 rounded-full border border-winf-primary/30 bg-winf-primary/5 text-winf-primary text-[9px] font-black uppercase tracking-[0.4em] mb-8 md:mb-12">
+              <Building2 size={12} /> ARQUITETURA DE ALTO PADRÃO • EXCLUSIVO WINF™
            </div>
-           <h1 className="text-4xl md:text-8xl font-black tracking-tighter leading-[0.85] mb-8 md:mb-10 uppercase">
-              RETAIL<br/>
-              MACHINE.
+           <h1 className="text-4xl md:text-8xl font-black tracking-tighter leading-[0.85] mb-8 md:mb-10 uppercase italic">
+              EXPERIÊNCIA<br/>
+              IMERSIVA.
            </h1>
            <p className="text-white/40 text-base md:text-xl max-w-2xl mx-auto font-light leading-relaxed mb-12 md:mb-16">
-              O Winf™ Kiosk é uma oportunidade estratégica de varejo, disponível exclusivamente para licenciados <span className="text-white font-bold">Advanced</span> e <span className="text-white font-bold">Enterprise</span> via convite direto.
+              O Winf™ Kiosk Architecture é o epicentro da tecnologia de proteção solar. Um ponto de demonstração exclusivo onde o luxo encontra a engenharia molecular para transformar ambientes residenciais e industriais.
            </p>
            <div className="flex flex-col sm:flex-row gap-4 md:gap-6 items-center w-full sm:w-auto">
-             <button onClick={() => handleCtaClick('service')} className="w-full sm:w-auto bg-white text-black px-10 py-4 rounded-full text-[9px] font-black uppercase tracking-[0.4em] hover:bg-white/90 transition-all text-center">
-                Solicitar Atendimento Exclusivo
+             <button onClick={() => handleCtaClick('service')} className="w-full sm:w-auto bg-white text-black px-12 py-5 rounded-full text-[10px] font-black uppercase tracking-[0.4em] hover:bg-white/90 transition-all text-center shadow-[0_0_50px_rgba(255,255,255,0.2)]">
+                Agendar Consultoria Técnica
              </button>
            </div>
         </div>
       </header>
 
-      {/* Componentes do Dossiê Técnico (CAPEX Details) */}
-      <section className="py-32 bg-[#020202] border-t border-white/5 relative overflow-hidden">
-        <div className="max-w-6xl mx-auto px-6 text-center mb-20">
-            <h2 className="text-[10px] font-bold text-white/50 uppercase tracking-[0.4em] mb-4">Engenharia do Ativo</h2>
-            <h3 className="text-4xl font-heading font-light text-white">O QUE ESTÁ <span className="font-bold">INCLUSO.</span></h3>
+      {/* Discovery Section - Key Deliverables */}
+      <section className="py-40 bg-[#020202] border-t border-white/5 relative overflow-hidden">
+        <div className="max-w-6xl mx-auto px-6 text-center mb-24">
+            <h2 className="text-[10px] font-black text-winf-primary uppercase tracking-[0.5em] mb-4">Núcleo de Experiência</h2>
+            <h3 className="text-4xl md:text-6xl font-heading font-light text-white uppercase tracking-tighter">O ECOSSISTEMA <span className="font-bold">INCLUSIVO.</span></h3>
         </div>
 
-        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-[#080808] border border-white/5 p-10 rounded-2xl group hover:border-white/40 transition-all">
-                <Box size={32} className="text-white mb-6" />
-                <h4 className="text-white font-bold text-lg mb-4 uppercase tracking-widest">Projeto Modular</h4>
-                <p className="text-gray-500 text-sm leading-relaxed">Estrutura de alumínio aeroespacial anodizado, iluminação LED dinâmica e mobiliário planejado para 12m².</p>
+        <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { 
+                icon: Cpu, 
+                title: "WINF™ OS Integrado", 
+                desc: "Terminal touch para agendamento instantâneo de visitas, registro de medidas e upload de fotos do projeto." 
+              },
+              { 
+                icon: Monitor, 
+                title: "Simulação VR", 
+                desc: "Realidade virtual imersiva que permite ao cliente visualizar a transformação do ambiente antes da aplicação." 
+              },
+              { 
+                icon: Activity, 
+                title: "Teste de Eficiência", 
+                desc: "Demonstração real de calor e rejeição IR, provando a performance superior das películas Select™." 
+              },
+              { 
+                icon: Box, 
+                title: "Packaging Elite", 
+                desc: "Apresentação física de amostras, embalagens exclusivas e liners premium para escolha do acabamento." 
+              }
+            ].map((feature, i) => (
+              <div key={i} className="bg-white/5 border border-white/10 p-10 rounded-[32px] hover:bg-white/10 hover:border-white/30 transition-all duration-500 group">
+                <feature.icon size={32} className="text-winf-primary mb-8 group-hover:scale-110 transition-transform" />
+                <h4 className="text-white font-black text-xs uppercase tracking-[0.2em] mb-4">{feature.title}</h4>
+                <p className="text-gray-500 text-[11px] leading-relaxed uppercase tracking-wider">{feature.desc}</p>
+              </div>
+            ))}
+        </div>
+      </section>
+
+      {/* Visual Proof Section */}
+      <section className="py-40 bg-[#050505] relative">
+         <div className="max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center gap-20">
+            <div className="lg:w-1/2">
+                <img 
+                  src={(WINF_CONSTANTS as any).assets.beforeAfter01} 
+                  className="w-full h-auto rounded-[40px] shadow-2xl border border-white/10 grayscale hover:grayscale-0 transition-all duration-1000"
+                  alt="Architectural Result"
+                  referrerPolicy="no-referrer"
+                />
             </div>
-            <div className="bg-[#080808] border border-white/5 p-10 rounded-2xl group hover:border-white/40 transition-all">
-                <Monitor size={32} className="text-white mb-6" />
-                <h4 className="text-white font-bold text-lg mb-4 uppercase tracking-widest">Winf™ PARTNERS Kiosk Ed.</h4>
-                <p className="text-gray-500 text-sm leading-relaxed">Terminal touch 24" com software de gestão em tempo real, CRM de atendimento e checkout PIX integrado.</p>
+            <div className="lg:w-1/2 space-y-10">
+                <div className="inline-block px-4 py-2 bg-winf-primary/10 border border-winf-primary/20 rounded-full">
+                    <span className="text-[10px] font-black text-winf-primary uppercase tracking-widest">Performance Architectural</span>
+                </div>
+                <h2 className="text-5xl md:text-7xl font-black text-white uppercase tracking-tighter leading-none">
+                  DOMINÂNCIA <br/> TÉRMICA.
+                </h2>
+                <p className="text-gray-400 text-lg font-light leading-relaxed">
+                  Não vendemos películas para celular. Entregamos soluções de alta engenharia para quem exige conforto absoluto. O Kiosk é o ponto de contato onde a visita técnica é formalizada com precisão molecular.
+                </p>
+                <div className="grid grid-cols-2 gap-8 pt-6 border-t border-white/5">
+                   <div>
+                      <div className="text-3xl font-black text-white">Select™</div>
+                      <div className="text-[10px] text-gray-500 uppercase tracking-widest mt-2">Tecnologia Americana</div>
+                   </div>
+                   <div>
+                      <div className="text-3xl font-black text-white">White™</div>
+                      <div className="text-[10px] text-gray-500 uppercase tracking-widest mt-2">Estética Decorativa</div>
+                   </div>
+                </div>
             </div>
-            <div className="bg-[#080808] border border-white/5 p-10 rounded-2xl group hover:border-white/40 transition-all">
-                <Scissors size={32} className="text-white mb-6" />
-                <h4 className="text-white font-bold text-lg mb-4 uppercase tracking-widest">W-Cut Hardware</h4>
-                <p className="text-gray-500 text-sm leading-relaxed">Plotter de precisão micronizada para corte de películas protetoras de gadgets sob demanda (Zero desperdício).</p>
+         </div>
+      </section>
+
+      {/* Operational Model Section */}
+      <section className="py-40 bg-[#020202] border-t border-white/5">
+        <div className="max-w-6xl mx-auto px-6">
+            <div className="bg-gradient-to-br from-white/5 to-transparent border border-white/10 p-16 rounded-[48px] overflow-hidden relative group">
+                <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <Users size={200} />
+                </div>
+                <div className="relative z-10 max-w-2xl">
+                    <h2 className="text-4xl font-black text-white uppercase tracking-tighter mb-8">MODELO DE OPERAÇÃO DE ELITE</h2>
+                    <p className="text-gray-400 mb-12 text-lg">
+                      Cada Kiosk conta com um administrador centralizado que orquestra uma rede de <span className="text-white font-bold">2 ou mais aplicadores autorizados WINF™</span>, formalizados para prestação de serviço de alto nível no shopping. 
+                      <br/><br/>
+                      Membros do nível <span className="text-white font-bold italic underline">SELECT</span> podem se qualificar para atuar na ponta da prestação de serviço, servindo como o braço técnico da Unidade de Varejo.
+                    </p>
+                    <div className="flex flex-wrap gap-4">
+                        <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-full flex items-center gap-3">
+                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full shadow-[0_0_10px_rgb(34,197,94)]"></div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white">Aprovação Shopping</span>
+                        </div>
+                        <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-full flex items-center gap-3">
+                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full shadow-[0_0_10px_rgb(34,197,94)]"></div>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white">Instaladores de Elite</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
       </section>
 
-      {/* Investment Table */}
-      <section className="py-40 bg-[#050505] border-t border-white/5">
-        <div className="max-w-[1200px] mx-auto px-6 text-center">
-            <h2 className="text-3xl md:text-5xl font-heading font-light mb-24">ESTRUTURA DE <span className="font-bold text-white">INVESTIMENTO</span></h2>
-            
-            <div className="bg-[#0a0a0a] border border-white/5 rounded-3xl p-16 relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-16 shadow-2xl">
-                <div className="text-left space-y-6 flex-1">
-                    <p className="text-white/50 font-bold uppercase tracking-[0.4em] text-xs">Total Capex Estimado</p>
-                    <h2 className="text-7xl font-bold text-white tracking-tighter">R$ 120k</h2>
-                    <p className="text-gray-500 text-sm max-w-sm">Valor turnkey: projeto, hardware, software, treinamento e estoque inicial estratégico.</p>
-                </div>
-                
-                <div className="w-px h-40 bg-white/5 hidden md:block"></div>
+      {/* Immersive Gallery Section */}
+      <section className="py-40 bg-[#050505] overflow-hidden">
+        <div className="max-w-7xl mx-auto px-6 mb-20 text-center">
+            <h2 className="text-[10px] font-black text-winf-primary uppercase tracking-[0.5em] mb-4">Galeria de Ativos</h2>
+            <h3 className="text-4xl md:text-6xl font-heading font-light text-white uppercase tracking-tighter">PREENÇA EM <span className="font-bold italic">LUXO.</span></h3>
+        </div>
+        
+        <div className="flex gap-4 md:gap-8 overflow-x-auto no-scrollbar px-6 md:px-20 pb-20">
+          {[
+            { img: (WINF_CONSTANTS as any).assets.kiosk, label: "Interface de Atendimento" },
+            { img: (WINF_CONSTANTS as any).assets.kioskVR, label: "Imersão VR" },
+            { img: (WINF_CONSTANTS as any).assets.kioskArchitecture, label: "Engenharia em Tela" },
+            { img: (WINF_CONSTANTS as any).assets.kioskImmersive, label: "Atendimento Consultivo" },
+            { img: (WINF_CONSTANTS as any).assets.kioskPackaging, label: "Exclusividade Select™" }
+          ].map((item, i) => (
+            <div key={i} className="min-w-[300px] md:min-w-[450px] aspect-[4/5] rounded-[32px] overflow-hidden border border-white/10 relative group shrink-0">
+               <img src={item.img} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" referrerPolicy="no-referrer" />
+               <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
+               <div className="absolute bottom-10 left-10">
+                  <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">{item.label}</span>
+               </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
-                <div className="flex-1 w-full space-y-4">
-                    <div className="flex justify-between items-center p-4 bg-amber-500/5 rounded-xl border border-amber-500/20">
-                        <span className="text-xs text-amber-500 uppercase tracking-widest font-bold">Status</span>
-                        <span className="text-white font-mono font-bold flex items-center gap-2"><Lock size={12}/> INVITE ONLY</span>
-                    </div>
-                    <button onClick={() => handleCtaClick('invite')} className="w-full py-5 bg-white text-black font-black text-xs uppercase tracking-[0.2em] rounded-sm hover:bg-white/90 transition-all shadow-xl">
-                        Solicitar Convite
-                    </button>
-                    <p className="text-[9px] text-white/20 uppercase tracking-widest mt-4">
-                        Apenas para membros Advanced/Enterprise.
-                    </p>
+      {/* Investment Summary */}
+      <section className="py-40 bg-[#050505]">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+            <div className="mb-20">
+                <h3 className="text-[10px] font-black text-winf-primary uppercase tracking-[0.5em] mb-4">Investimento Turnkey</h3>
+                <h2 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white tracking-tighter">R$ 120.000</h2>
+                <p className="text-gray-500 text-[10px] md:text-sm mt-6 uppercase tracking-widest leading-relaxed">Projeto, Hardware Imersivo, Software WINF OS e Treinamento Master.</p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row justify-center gap-6 mb-20 max-w-2xl mx-auto">
+                <div className="flex-1 p-6 rounded-3xl border border-white/5 bg-white/5">
+                    <p className="text-[10px] font-black text-white/40 mb-2 uppercase tracking-widest">Payback Est.</p>
+                    <p className="text-2xl font-black text-white uppercase tracking-tighter">12 a 18 Meses</p>
+                </div>
+                <div className="flex-1 p-6 rounded-3xl border border-white/5 bg-white/5">
+                    <p className="text-[10px] font-black text-white/40 mb-2 uppercase tracking-widest">Modelo</p>
+                    <p className="text-2xl font-black text-white uppercase tracking-tighter">Turnkey Elite</p>
                 </div>
             </div>
+            
+            <button onClick={() => handleCtaClick('invite')} className="w-full py-6 bg-white text-black font-black text-xs uppercase tracking-[0.5em] rounded-full hover:scale-[1.02] transition-all shadow-[0_0_50px_rgba(255,255,255,0.1)] mb-6">
+                Solicitar Reserva de Território
+            </button>
+            <p className="text-[9px] text-zinc-600 uppercase tracking-widest">Exclusivo para membros Advanced e Enterprise selecionados.</p>
         </div>
       </section>
 

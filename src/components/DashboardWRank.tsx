@@ -14,7 +14,8 @@ import {
   ChevronRight, 
   Clock,
   BookOpen,
-  Users
+  Users,
+  Globe
 } from 'lucide-react';
 import { useWinf } from '../contexts/WinfContext';
 import { Achievement, WRankMission } from '../types';
@@ -261,6 +262,41 @@ const DashboardWRank: React.FC = () => {
                     </div>
                 ))}
             </div>
+        </div>
+
+        {/* Global Leaderboard */}
+        <div className="bg-gradient-to-br from-[#0a0a0a] to-[#020202] border border-white/10 rounded-2xl p-8 shadow-xl relative overflow-hidden">
+             <div className="absolute top-0 right-0 p-20 bg-winf-aerocore_blue/5 rounded-full blur-3xl"></div>
+             <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3">
+                <Globe size={24} className="text-winf-aerocore_blue" /> Global W-Rank Leaderboard
+             </h3>
+             <div className="space-y-4 relative z-10">
+                {[
+                   { rank: 1, name: "Unidade Piloto Santos", level: "Legend", xp: "145,200", isCurrentUser: true },
+                   { rank: 2, name: "Winf Select SP", level: "Master", xp: "112,050", isCurrentUser: false },
+                   { rank: 3, name: "Studio Master Sul", level: "Master", xp: "98,400", isCurrentUser: false },
+                   { rank: 4, name: "AeroCore Rio", level: "Elite", xp: "45,300", isCurrentUser: false },
+                   { rank: 5, name: "Elite Floripa", level: "Operador", xp: "12,100", isCurrentUser: false },
+                ].map(leader => (
+                    <div key={leader.rank} className={`flex items-center justify-between p-4 rounded-xl border ${leader.isCurrentUser ? 'bg-winf-aerocore_blue/10 border-winf-aerocore_blue/30 shadow-[0_0_15px_rgba(0,191,255,0.1)]' : 'bg-black border-white/5'}`}>
+                        <div className="flex items-center gap-4">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${leader.rank === 1 ? 'bg-yellow-400 text-black' : leader.rank === 2 ? 'bg-gray-300 text-black' : leader.rank === 3 ? 'bg-amber-600 text-black' : 'bg-zinc-800 text-gray-400'}`}>
+                                {leader.rank}
+                            </div>
+                            <div>
+                                <p className="text-sm font-bold text-white flex items-center gap-2">
+                                  {leader.name} {leader.isCurrentUser && <span className="text-[9px] uppercase tracking-widest text-winf-aerocore_blue">(Você)</span>}
+                                </p>
+                                <p className={`text-[10px] font-black uppercase tracking-widest ${getLevelColor(leader.level)}`}>{leader.level}</p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                           <p className="text-lg font-mono font-bold text-white">{leader.xp}</p>
+                           <p className="text-[9px] text-gray-500 uppercase tracking-widest">XP Total</p>
+                        </div>
+                    </div>
+                ))}
+             </div>
         </div>
     </div>
   );

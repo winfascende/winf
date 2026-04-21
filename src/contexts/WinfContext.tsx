@@ -30,11 +30,13 @@ import {
   WhatsAppChat,
   InstallationJob,
   PartnerTask,
-  ParadoxAnalysis
+  ParadoxAnalysis,
+  AgentInsight
 } from '../types';
 import { db, auth } from '../lib/firebase';
-import { doc, getDoc, setDoc, collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, limit } from 'firebase/firestore';
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
+import { doc, getDoc, setDoc, collection, query, where, getDocs, addDoc, updateDoc, deleteDoc, limit, orderBy } from 'firebase/firestore';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from 'firebase/auth';
+import { generateResponse } from '../services/aiService';
 
 export const fileToBase64 = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -108,36 +110,6 @@ export const useWinf = () => {
   return context;
 };
 
-// Fixed missing arch_clearance to satisfy the User interface
-const PROTO_USER_TIAGO: User = {
-  id: 'proto-tiago-001',
-  name: 'Tiago Augusto Correa',
-  email: 'tiago.correa@winf.com',
-  role: 'Admin',
-  avatar: 'https://via.placeholder.com/150/0057FF/FFFFFF?text=TC', 
-  company: 'Winf Corporate',
-  phone: '(13) 99999-9999',
-  cnpj: '00.000.000/0001-00',
-  address: {
-    city: 'Santos',
-    state: 'SP',
-    street: 'Av. Ana Costa, 400',
-    zip: '11060-002'
-  },
-  w_rank_xp: 4500,
-  w_rank_level: 'Master',
-  winfCoins: 12500,
-  arch_clearance: {
-    invisible: true,
-    blackpro: true,
-    dualreflect: true
-  },
-  winf_knowledge: 2500,
-  cortex_influence: 980,
-  neural_memory: 1200,
-  tactical_assets: 450
-};
-
 export const WinfProvider = ({ children }: { children?: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -167,6 +139,10 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
   const [trainingModules, setTrainingModules] = useState<any[]>([]);
   const [partnerTasks, setPartnerTasks] = useState<PartnerTask[]>([]);
   const [agentInsights, setAgentInsights] = useState<AgentInsight[]>([]);
+  const [favoriteModules, setFavoriteModules] = useState<string[]>(() => {
+    const saved = localStorage.getItem('winf_favorites');
+    return saved ? JSON.parse(saved) : [];
+  });
   
   const [totalLeads, setTotalLeads] = useState(0);
   const [totalMembers, setTotalMembers] = useState(0);
@@ -219,10 +195,11 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
 
   // WhatsApp Hub & Lead Distribution State
   const [whatsappConfigs, setWhatsappConfigs] = useState<WhatsAppConfig[]>([
-    { id: 'wa-central', city: 'Central (Brasil)', phoneNumber: '+55 13 99999-0000', isCentral: true, status: 'online', agentName: 'Winf Core AI' },
-    { id: 'wa-santos', city: 'Santos', phoneNumber: '+55 13 98888-1111', isCentral: false, status: 'online', agentName: 'Santos Agent v1' },
-    { id: 'wa-sp', city: 'São Paulo', phoneNumber: '+55 11 97777-2222', isCentral: false, status: 'online', agentName: 'SP Agent v2' },
-    { id: 'wa-curitiba', city: 'Curitiba', phoneNumber: '+55 41 96666-3333', isCentral: false, status: 'online', agentName: 'Curitiba Agent v1' },
+    { id: 'wa-central', city: 'Central (Brasil)', phoneNumber: '+55 13 99919-1510', isCentral: true, status: 'online', agentName: 'Winf Core AI' },
+    { id: 'wa-santos', city: 'Santos (Sede)', phoneNumber: '+55 13 99919-1510', isCentral: false, status: 'online', agentName: 'Santos Agent v1' },
+    { id: 'wa-pg', city: 'Praia Grande', phoneNumber: '+55 13 99919-1510', isCentral: false, status: 'online', agentName: 'PG Agent v1' },
+    { id: 'wa-sorocaba', city: 'Sorocaba', phoneNumber: '+55 15 99999-1111', isCentral: false, status: 'online', agentName: 'Sorocaba Agent v1' },
+    { id: 'wa-cg', city: 'Campina Grande', phoneNumber: '+55 83 99999-2222', isCentral: false, status: 'online', agentName: 'CG Agent v1' },
   ]);
 
   const [activeChats, setActiveChats] = useState<WhatsAppChat[]>([
@@ -310,29 +287,43 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
     }
   };
 
-  const loginAsPrototype = async () => {
-    setUser(PROTO_USER_TIAGO);
-    setIsAuthenticated(true);
-    setIsLoading(false);
-  };
-
   const logout = async () => {
-    if (user?.id !== 'proto-tiago-001') {
-      await signOut(auth);
-    }
+    await signOut(auth);
     setUser(null); 
     setIsAuthenticated(false);
   };
 
+  const loginAsPrototype = () => {
+    const protoUser: User = {
+      id: 'proto-tiago-001',
+      name: 'Tiago (Prototype)',
+      email: 'tiago@winf.com',
+      role: 'Admin',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+      winfCoins: 15000,
+      w_rank_xp: 2500,
+      w_rank_level: 'Master',
+      company: 'WINF CORE™ HQ',
+      territory: 'Santos (Master Unit)',
+      city: 'Santos',
+      technical_level: 'Master',
+      is_active: true,
+      arch_clearance: {
+        invisible: true,
+        blackpro: true,
+        dualreflect: true,
+      },
+      winf_knowledge: 95,
+      cortex_influence: 88,
+      neural_memory: 92,
+      tactical_assets: 90
+    };
+    setUser(protoUser);
+    setIsAuthenticated(true);
+  };
+
   const fetchCoinLedger = useCallback(async () => {
     if (!user?.id) return;
-    if (user?.id === 'proto-tiago-001') { 
-      setCoinLedger([
-        { id: 'cl1', user_id: user.id, amount: 50, description: 'Bônus de Login', action_type: 'EARN', created_at: new Date().toISOString() },
-        { id: 'cl2', user_id: user.id, amount: -20, description: 'Resgate de Voucher', action_type: 'SPEND', created_at: new Date(Date.now() - 3600000).toISOString() },
-      ]);
-      return; 
-    } 
     try {
       const q = query(collection(db, 'coin_ledger'), where('user_id', '==', user.id));
       const querySnapshot = await getDocs(q);
@@ -345,12 +336,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
 
   const updateUserCoins = async (amount: number, reason: string, xp: number = 0) => {
     if (!user?.id) return;
-    if (user?.id === 'proto-tiago-001') { 
-      setUser(prev => prev ? { ...prev, winfCoins: prev.winfCoins + amount, w_rank_xp: prev.w_rank_xp + xp } : null);
-      setNotification({ show: true, message: amount > 0 ? `Ganhou moedas: ${reason}` : `Gastou moedas: ${reason}`, points: amount });
-      setRecentActivities(prev => [{ id: `act-${Date.now()}`, type: 'XP_EARNED', description: reason, created_at: new Date().toISOString() }, ...prev]);
-      return;
-    }
     try {
       const docRef = doc(db, 'users', user.id);
       const docSnap = await getDoc(docRef);
@@ -433,7 +418,7 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
     return { success: true, error: null };
   }, []);
 
-  const completeJobAndGenerateWarranty = useCallback(async (jobId: string) => {
+  const completeJobAndGenerateWarranty = useCallback(async (jobId: string, additionalData?: { vehiclePlate: string }) => {
     const job = installationJobs.find(j => j.id === jobId);
     if (!job) return { success: false, error: 'Job not found' };
 
@@ -445,21 +430,23 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
       ...j, 
       status: 'completed', 
       completed_at: new Date().toISOString(),
-      warranty_id: warrantyId 
+      warranty_id: warrantyId,
+      vehicle_plate: additionalData?.vehiclePlate
     } : j));
 
     // Register Warranty in the system
     const newWarranty = {
       id: warrantyId,
       customerName: job.customer_name,
-      productLine: 'AeroCore™ Full',
+      productLine: job.chosen_film || 'Winf Select',
       serialNumber: job.service_order_id,
       purchaseDate: new Date().toISOString(),
       status: 'Ativa',
       agent_status: 'pending',
-      licenciado_id: user?.id
+      licenciado_id: user?.id,
+      vehiclePlate: additionalData?.vehiclePlate
     };
-    setWarranties(prev => [newWarranty, ...prev]);
+    setWarranties(prev => [newWarranty as any, ...prev]);
 
     // Gamify
     gamify('WARRANTY_REGISTERED');
@@ -469,23 +456,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
 
   const fetchLeads = useCallback(async () => {
     if (!user?.id) return;
-    if (user?.id === 'proto-tiago-001') { 
-      setLeads([
-        { 
-          id: 'lead1', user_id: 'proto-tiago-001', name: 'Ricardo Santos (Porsche 911)', contact: '11999991234', source: 'Instagram Ads', interest: 'NeoSkin PPF Gloss', status: 'Zona de Ataque', ai_score: 95, 
-          dominance_score: 92, decay_level: 80, last_paradox_truth: 'Cliente busca status, mas teme o custo invisível da manutenção.', last_paradox_maneuver: 'Focar na Valorização de Ativo e Revenda Garantida.' 
-        },
-        { 
-          id: 'lead2', user_id: 'proto-tiago-001', name: 'Amanda Carvalho (Audi Q8)', contact: '13988887766', source: 'W.A.R.P Search', interest: 'AeroCore NanoCeramic', status: 'Zona de Pressão', ai_score: 70,
-          dominance_score: 68, decay_level: 40, last_paradox_truth: 'Comparando Winf com película comum. Medo de ser "enganado" por marketing.', last_paradox_maneuver: 'Demonstração Técnica da Grade Molecular e Certificado MIL-SPEC.'
-        },
-        { 
-          id: 'lead3', user_id: 'proto-tiago-001', name: 'Condomínio Prime (Arquitetura)', contact: '11977775544', source: 'Select Pro Portal', interest: 'Winf Select IR-99', status: 'Zona de Ataque', ai_score: 88,
-          dominance_score: 85, decay_level: 90, last_paradox_truth: 'Decisão coletiva. Síndico focado em redução de custo energético.', last_paradox_maneuver: 'Apresentar Laudo de ROI Energético e Garantia de 15 Anos.'
-        },
-      ]);
-      return; 
-    } 
     try {
       const q = query(collection(db, 'leads'), where('user_id', '==', user.id));
       const querySnapshot = await getDocs(q);
@@ -509,16 +479,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
 
   const addLead = useCallback(async (lead: any) => {
     const userId = user?.id || 'system-public-inbox';
-    if (userId === 'proto-tiago-001') { 
-      const newLead = { 
-        ...lead, 
-        id: `demo-lead-${Date.now()}`, user_id: userId, created_at: new Date().toISOString(),
-        dominance_score: 50, decay_level: 20, agent_status: 'pending'
-      };
-      setLeads(prev => [newLead, ...prev]);
-      gamify('LEAD_ADDED');
-      return { success: true, error: null };
-    }
     try {
       const docRef = await addDoc(collection(db, 'leads'), { ...lead, user_id: userId, created_at: new Date().toISOString(), agent_status: 'pending' });
       const newLead = { id: docRef.id, ...lead, user_id: userId, agent_status: 'pending' };
@@ -530,7 +490,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
   }, [user?.id, gamify]);
 
   const updateLead = useCallback(async (id: string, updates: any) => {
-    if (user?.id === 'proto-tiago-001') { setLeads(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l)); return { success: true, error: null }; }
     try {
       await updateDoc(doc(db, 'leads', id), updates);
       setLeads(prev => prev.map(l => l.id === id ? { ...l, ...updates } : l));
@@ -538,10 +497,9 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
     } catch (e: any) {
       return { success: false, error: e.message };
     }
-  }, [user?.id]);
+  }, []);
 
   const deleteLead = useCallback(async (id: string) => {
-    if (user?.id === 'proto-tiago-001') { setLeads(prev => prev.filter(l => l.id !== id)); return { success: true, error: null }; }
     try {
       await deleteDoc(doc(db, 'leads', id));
       setLeads(prev => prev.filter(l => l.id !== id));
@@ -549,16 +507,10 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
     } catch (e: any) {
       return { success: false, error: e.message };
     }
-  }, [user?.id]);
+  }, []);
 
   const fetchWarranties = useCallback(async () => {
     if (!user?.id) return;
-    if (user?.id === 'proto-tiago-001') { 
-      setWarranties([
-        { id: 'warr1', customerName: 'João Silva', customerEmail: 'joao@email.com', productLine: 'AeroCore™ Nano-Ceramic', serialNumber: 'SN-123456', purchaseDate: new Date().toISOString().split('T')[0], coverage: '5 years', status: 'Active' },
-      ]);
-      return; 
-    } 
     try {
       const q = query(collection(db, 'warranties'), where('licenciado_id', '==', user.id));
       const querySnapshot = await getDocs(q);
@@ -583,12 +535,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
 
   const registerWarranty = useCallback(async (data: any) => {
     if (!user?.id) return { success: false, error: "Auth required" };
-    if (user?.id === 'proto-tiago-001') {
-      const newWarranty = { ...data, id: `demo-warranty-${Date.now()}`, licenciado_id: user.id, status: 'Active', coverage: '5 years', serialNumber: `SN-${Math.floor(100000 + Math.random() * 900000)}`, created_at: new Date().toISOString() };
-      setWarranties(prev => [newWarranty, ...prev]);
-      gamify('WARRANTY_REGISTERED');
-      return { success: true, error: null };
-    }
     const sn = `SN-${Math.floor(100000 + Math.random() * 900000)}`;
     try {
       await addDoc(collection(db, 'warranties'), { licenciado_id: user.id, customer_name: data.customerName, customer_email: data.customerEmail, product_line: data.productLine, serial_number: sn, installation_date: data.purchaseDate, status: 'Active' });
@@ -600,99 +546,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
   }, [user?.id, gamify, fetchWarranties]);
 
   const fetchProducts = useCallback(async () => {
-    if (user?.id === 'proto-tiago-001') { 
-      setProducts([
-        { 
-          id: 'prod-invisible', 
-          name: 'Winf Invisible®', 
-          line: 'WINF Select™', 
-          description: 'Linha Arquitetura IR Advanced Ceramic. 100% UV, 86% IR. Tecnologia NanoCeramic de última geração.', 
-          benefits: ['100% Rejeição UV', '86% Rejeição IR', 'Alta Transparência', 'Não interfere em sinais'],
-          category: 'Arquitetura', 
-          thickness: '2 mil',
-          dimensions: '1.52m x 30m',
-          warranty_years: 10,
-          thermal_score: 9, 
-          light_score: 8, 
-          shield_score: 7, 
-          privacy_score: 3, 
-          price: 450.00, 
-          image_url: 'https://images.unsplash.com/photo-1600607686527-6fb886090705', 
-          stock_quantity: 500, 
-          is_active: true, 
-          available_widths: [0.50, 0.75, 1.00, 1.52],
-          created_at: new Date().toISOString(),
-          tech_specs: { vlt: '70%', irr: '86%', uvr: '100%', tser: '58%' }
-        },
-        { 
-          id: 'prod-dual', 
-          name: 'Winf Dual Reflect®', 
-          line: 'WINF Select™', 
-          description: 'Arquitetura Metalizada. Equilíbrio perfeito entre privacidade e rejeição térmica.', 
-          benefits: ['Alta Privacidade Diurna', 'Rejeição Térmica Superior', 'Redução de Brilho'],
-          category: 'Arquitetura', 
-          thickness: '1.5 mil',
-          dimensions: '1.52m x 30m',
-          warranty_years: 7,
-          thermal_score: 8, 
-          light_score: 6, 
-          shield_score: 6, 
-          privacy_score: 8, 
-          price: 380.00, 
-          image_url: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab', 
-          stock_quantity: 500, 
-          is_active: true, 
-          available_widths: [0.50, 0.75, 1.00, 1.52],
-          created_at: new Date().toISOString(),
-          tech_specs: { vlt: '15%', irr: '81%', uvr: '99%', tser: '72%' }
-        },
-        { 
-          id: 'prod-blackpro', 
-          name: 'Winf BlackPro®', 
-          line: 'WINF Select™', 
-          description: 'Arquitetura Não Metalizada. Estética premium com alta durabilidade.', 
-          benefits: ['Cor Estável', 'Sem Interferência', 'Fácil Aplicação'],
-          category: 'Arquitetura', 
-          thickness: '1.5 mil',
-          dimensions: '1.52m x 30m',
-          warranty_years: 7,
-          thermal_score: 7, 
-          light_score: 4, 
-          shield_score: 6, 
-          privacy_score: 9, 
-          price: 290.00, 
-          image_url: 'https://images.unsplash.com/photo-1502672260273-b3db776b971a', 
-          stock_quantity: 500, 
-          is_active: true, 
-          available_widths: [0.50, 0.75, 1.00, 1.52],
-          created_at: new Date().toISOString(),
-          tech_specs: { vlt: '05%', irr: '73%', uvr: '99%', tser: '65%' }
-        },
-        { 
-          id: 'prod-shadow', 
-          name: 'ShadowCarbon™', 
-          line: 'WINF AeroCore™ MOBILE', 
-          description: 'Tecnologia Carbon para veículos premium. Estética negra profunda.', 
-          benefits: ['Estética Premium', 'Rejeição de Calor', 'Sem Metal'],
-          category: 'Automotivo', 
-          thickness: '1.5 mil',
-          dimensions: '1.52m x 30m',
-          warranty_years: 5,
-          thermal_score: 6, 
-          light_score: 5, 
-          shield_score: 8, 
-          privacy_score: 7, 
-          price: 350.00, 
-          image_url: 'https://images.unsplash.com/photo-1579586311681-35b866596b6d', 
-          stock_quantity: 200, 
-          is_active: true, 
-          available_widths: [0.50, 0.75, 1.00, 1.52],
-          created_at: new Date().toISOString(),
-          tech_specs: { vlt: '20%', irr: '65%', uvr: '99%', tser: '52%' }
-        }
-      ]);
-      return;
-    }
     try {
       const q = query(collection(db, 'products'), where('is_active', '==', true));
       const querySnapshot = await getDocs(q);
@@ -705,7 +558,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
 
   const fetchOrders = useCallback(async () => {
     if (!user?.id) return;
-    if (user?.id === 'proto-tiago-001') { setOrders([]); return; } 
     try {
       const q = query(collection(db, 'orders'), where('user_id', '==', user.id));
       const querySnapshot = await getDocs(q);
@@ -718,7 +570,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
 
   const fetchInstallations = useCallback(async () => {
     if (!user?.id) return;
-    if (user?.id === 'proto-tiago-001') { setInstallations([]); return; }
     try {
       const q = query(collection(db, 'installations'), where('user_id', '==', user.id));
       const querySnapshot = await getDocs(q);
@@ -761,27 +612,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
       created_at: new Date().toISOString()
     };
 
-    if (user?.id === 'proto-tiago-001') {
-      setInstallations(prev => [installationData, ...prev]);
-      
-      // Auto-generate warranty
-      const warrantyId = `W-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
-      const newWarranty: WarrantyRegistration = {
-        id: warrantyId,
-        customerName: data.client_name,
-        customerEmail: data.client_email,
-        productLine: data.product_name,
-        serialNumber: installationId,
-        purchaseDate: data.date,
-        status: 'Active',
-        licenciado_id: user.id,
-        created_at: new Date().toISOString()
-      };
-      setWarranties(prev => [newWarranty, ...prev]);
-      
-      gamify('INSTALLATION_REGISTERED');
-      return { success: true, error: null };
-    }
     try {
       await setDoc(doc(db, 'installations', installationId), installationData);
       
@@ -810,13 +640,15 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
   const createOrder = useCallback(async (items: any[], shippingAddress: any, paymentMethod: string) => {
     if (!user?.id) return { success: false, error: "Auth required" };
     const total = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
-    if (user?.id === 'proto-tiago-001') {
-      const newOrder = { id: `demo-order-${Date.now()}`, user_id: user.id, total_amount: total, status: 'completed', created_at: new Date().toISOString() };
-      setOrders(prev => [newOrder, ...prev]);
-      return { success: true, error: null };
-    }
     try {
-      const docRef = await addDoc(collection(db, 'orders'), { user_id: user.id, total_amount: total, status: 'completed', created_at: new Date().toISOString() });
+      const docRef = await addDoc(collection(db, 'orders'), { 
+        user_id: user.id, 
+        total_amount: total, 
+        status: 'completed', 
+        created_at: new Date().toISOString(),
+        shipping_address: shippingAddress,
+        payment_method: paymentMethod
+      });
       const orderItems = items.map(i => ({ order_id: docRef.id, product_id: i.product_id, quantity: i.quantity, unit_price: i.unit_price }));
       for (const item of orderItems) {
         await addDoc(collection(db, 'order_items'), item);
@@ -829,7 +661,7 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
               await addStockItem({
                   product_id: product.id,
                   product_name: product.name,
-                  total_meters: 30 * item.quantity, // Assuming 30m per roll
+                  total_meters: 30 * item.quantity, 
                   width: 1.52,
                   remaining_meters: 30 * item.quantity
               });
@@ -845,12 +677,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
 
   const addStockItem = useCallback(async (item: any) => {
     if (!user?.id) return { success: false, error: "Auth" };
-    if (user?.id === 'proto-tiago-001') {
-      const newItem = { ...item, id: `stock-${Date.now()}`, user_id: user.id, created_at: new Date().toISOString() };
-      setStockItems(prev => [newItem, ...prev]);
-      setStockHistory(prev => [{ id: `hist-${Date.now()}`, user_id: user.id, product_id: item.product_id, product_name: item.product_name, type: 'IN', amount: item.total_meters, date: new Date().toISOString() }, ...prev]);
-      return { success: true, error: null };
-    }
     try {
       const docRef = await addDoc(collection(db, 'stock_items'), { ...item, user_id: user.id });
       setStockItems(prev => [{ id: docRef.id, ...item, user_id: user.id }, ...prev]);
@@ -861,10 +687,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
   }, [user?.id]);
   const fetchAiGenerations = useCallback(async () => {
     if (!user?.id) return;
-    if (user?.id === 'proto-tiago-001') { 
-      setAiGenerations([{ id: 'ai1', user_id: user.id, tool_used: 'Vision', prompt: 'Porsche 911 protected...', output_url: 'https://images.unsplash.com/photo-1618557219623-64a2747bb7eb', media_type: 'image/png', created_at: new Date().toISOString() }]);
-      return; 
-    }
     try {
       const q = query(collection(db, 'ai_generations'), where('user_id', '==', user.id));
       const querySnapshot = await getDocs(q);
@@ -877,12 +699,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
 
   const saveAiGeneration = useCallback(async (gen: any) => {
     if (!user?.id) return { success: false, error: "Auth required" };
-    if (user?.id === 'proto-tiago-001') {
-      const newGen = { ...gen, id: `demo-ai-${Date.now()}`, user_id: user.id, created_at: new Date().toISOString() };
-      setAiGenerations(prev => [newGen, ...prev]);
-      gamify('AI_GENERATED');
-      return { success: true, error: null };
-    }
     try {
       const docRef = await addDoc(collection(db, 'ai_generations'), { ...gen, user_id: user.id });
       setAiGenerations(prev => [{ id: docRef.id, ...gen, user_id: user.id }, ...prev]);
@@ -895,7 +711,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
 
   const fetchSocialPosts = useCallback(async () => {
     if (!user?.id) return;
-    if (user?.id === 'proto-tiago-001') { setSocialPosts([]); return; } 
     try {
       const q = query(collection(db, 'social_posts'), where('user_id', '==', user.id));
       const querySnapshot = await getDocs(q);
@@ -908,7 +723,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
 
   const fetchVehicles = useCallback(async () => {
     if (!user?.id) return;
-    if (user?.id === 'proto-tiago-001') { setVehicles([]); return; } 
     try {
       const q = query(collection(db, 'vehicles'), where('owner_id', '==', user.id));
       const querySnapshot = await getDocs(q);
@@ -921,10 +735,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
 
   const fetchPlatformEvents = useCallback(async () => {
     if (!user?.id) return; 
-    if (user?.id === 'proto-tiago-001') { 
-      setPlatformEvents([{ id: 'ev1', title: 'Global Townhall 2025', date: new Date().toISOString(), type: 'Online', host: 'CEO', created_at: new Date().toISOString(), target_roles: ['Admin', 'Licenciado', 'Member'] }]); 
-      return; 
-    } 
     try {
       const querySnapshot = await getDocs(collection(db, 'platform_events'));
       const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
@@ -936,15 +746,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
 
   const fetchMembers = useCallback(async () => {
     if (user?.role !== 'Admin') return;
-    if (user?.id === 'proto-tiago-001') {
-      setMembers([
-        { id: 'u1', name: 'Tiago Winf', email: 'tiago@winf.com', role: 'Admin', winfCoins: 15000, w_rank_level: 'Sovereign' },
-        { id: 'u2', name: 'João Silva', email: 'joao@parceiro.com', role: 'Licensee', winfCoins: 2500, w_rank_level: 'Master' },
-        { id: 'u3', name: 'Maria Oliveira', email: 'maria@membro.com', role: 'Member', winfCoins: 500, w_rank_level: 'Initiate' },
-        { id: 'u4', name: 'Carlos Souza', email: 'carlos@elite.com', role: 'Licensee', winfCoins: 8000, w_rank_level: 'Elite' },
-      ]);
-      return;
-    }
     try {
       const querySnapshot = await getDocs(collection(db, 'users'));
       const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
@@ -956,10 +757,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
 
   const updateUserRole = async (userId: string, newRole: string) => {
     if (user?.role !== 'Admin') return;
-    if (user?.id === 'proto-tiago-001') {
-      setMembers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole as any } : u));
-      return;
-    }
     try {
       await updateDoc(doc(db, 'users', userId), { role: newRole });
       setMembers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole as any } : u));
@@ -969,113 +766,6 @@ export const WinfProvider = ({ children }: { children?: ReactNode }) => {
   };
   const fetchDocumentItems = useCallback(async () => {
     if (!user?.id) return;
-    if (user?.id === 'proto-tiago-001') {
-      setDocumentItems([
-        {
-          id: 'manual-financeiro-v5',
-          title: 'Núcleo Estratégico & Unit Economics',
-          category: 'Equity',
-          content: `# MANUAL FINANCEIRO WINF™ PARTNERS V5.0
-## UNIT ECONOMICS (ARQUITETURA)
-
-A base de lucratividade do ecossistema Winf é fundamentada em margens agressivas sobre o custo do material.
-
-### 1. WINF BLACKPRO® (Entry Level)
-A porta de entrada. Ideal para volume e clientes focados em estética/privacidade.
-- **Custo Rolo (45m²):** R$ 400,00
-- **Custo m²:** R$ 8,88
-- **Preço Venda m²:** R$ 120,00
-- **Faturamento p/ Rolo:** R$ 5.400,00
-- **LUCRO LÍQUIDO (Material): R$ 5.000,00 (Markup: 1.250%)**
-
-### 2. WINF DUAL REFLECT® (Mid Tier)
-O cavalo de batalha corporativo. Alta rejeição de calor com privacidade.
-- **Custo Rolo (45m²):** R$ 800,00
-- **Custo m²:** R$ 17,77
-- **Preço Venda m²:** R$ 140,00
-- **Faturamento p/ Rolo:** R$ 6.300,00
-- **LUCRO LÍQUIDO (Material): R$ 5.500,00 (Markup: 687%)**
-
-### 3. WINF INVISIBLE® (High Ticket)
-A tecnologia cerâmica de elite. Transparência total e rejeição IR extrema.
-- **Custo Rolo (45m²):** R$ 1.400,00
-- **Custo m²:** R$ 31,11
-- **Preço Venda m²:** R$ 260,00 (Médio)
-- **Faturamento p/ Rolo:** R$ 11.700,00
-- **LUCRO LÍQUIDO (Material): R$ 10.300,00 (Markup: 735%)**
-
-## PROJEÇÃO DE ESCALA (CENÁRIO META)
-Vendendo o mix: 3 Rolos BlackPro + 2 Rolos Dual + 1 Rolo Invisible/mês.
-- **Investimento Estoque:** R$ 4.200,00
-- **Faturamento Bruto:** R$ 40.500,00
-- **Lucro Operacional:** R$ 36.300,00`,
-          access_role: 'Member',
-          created_at: new Date('2025-01-15').toISOString()
-        },
-        {
-          id: 'j-licenciado',
-          title: 'Blue Protocol: Jornada do Licenciado',
-          category: 'Estratégia',
-          content: `# BLUE PROTOCOL: A JORNADA DO ESPECIALISTA
-## FASE 1: INICIAÇÃO (D+0)
-- **Ativação Winf™ PARTNERS:** Configuração do ID Digital e carteira WinfCoin.
-- **Treinamento Gênesis:** Domínio da retórica Winf vs Mercado Comum.
-- **Kit de Branding:** Recebimento dos ativos visuais para redes sociais.
-
-## FASE 2: OPERAÇÃO ALPHA (D+30)
-- **NeuroMesh Integration:** Uso mandatório da IA para gerar visualizações para clientes.
-- **Workflow de Garantia:** Todo serviço deve ser registrado para gerar XP no W-Rank.
-- **Arsenal Tático:** Ativação de anúncios geolocalizados via Hub Central.
-
-## FASE 3: ESCALA E DOMINÂNCIA (D+90)
-- **Upgrade Territorial:** Transição de aplicador móvel para Ponto Físico ou Kiosk.
-- **Squad Building:** Recrutamento de técnicos nível Operador para delegar a execução.`,
-          access_role: 'Member',
-          created_at: new Date('2025-02-10').toISOString()
-        },
-        {
-          id: 'brand-bible-3',
-          title: 'Brand Bible 3.0: O Tom da Soberania',
-          category: 'Marca',
-          content: `# WINF™ PARTNERS BRAND BIBLE 3.0
-## POSICIONAMENTO: O PODER DO INVISÍVEL
-
-A Winf não vende "películas". Vendemos **Tecnologia de Blindagem Molecular**.
-
-### 1. TOM DE VOZ
-- **Autoritário:** Não peça permissão para ser o melhor.
-- **Técnico-Sofisticado:** Use termos como "Espectro Infravermelho", "Reflexão Seletiva" e "Pureza Ótica".
-- **Frio:** Evite excesso de cores ou exclamações. O luxo é silencioso.
-
-### 2. TERMINOLOGIA OBRIGATÓRIA
-- **Célula de Blindagem** (em vez de película/insulfilm)
-- **Jurisdição** (em vez de região/cidade)
-- **Ativo Tecnológico** (em vez de produto)
-- **AeroCore™** (em vez de cerâmica comum)`,
-          access_role: 'Member',
-          created_at: new Date('2025-03-05').toISOString()
-        },
-        {
-          id: 'ops-kiosk',
-          title: 'Operating Manual: Kiosk Retail Machine',
-          category: 'Operacional',
-          content: `# PROTOCOLO OPERACIONAL: WINF™ KIOSK
-## OBJETIVO: FLUXO E CONVERSÃO
-
-O Kiosk é uma antena de captação de tráfego de shopping para converter em tickets médios de R$ 450+.
-
-### 1. ABORDAGEM ALPHA
-Nunca pergunte "posso ajudar?". Use: "Já conhece a blindagem molecular para telas AeroCore?"
-
-### 2. HARDWARE W-CUT
-A calibração do plotter deve ser feita semanalmente. O uso de insumos não-homologados cancela a garantia da unidade.`,
-          access_role: 'Licenciado',
-          created_at: new Date('2025-03-20').toISOString()
-        },
-        { id: 'doc3', title: 'Ficha Técnica: WINF Dual Reflect', content: 'Película Arquitetônica Dual Reflect\nCategoria: Película de Controle Solar Arquitetônico\n...', category: 'Técnico', access_role: 'Licenciado', created_at: new Date().toISOString() }
-      ]);
-      return;
-    }
     try {
       const querySnapshot = await getDocs(collection(db, 'documents_master'));
       const data = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as any));
@@ -1087,10 +777,6 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
 
   const fetchTotalLeads = useCallback(async () => {
     if (!user?.id) return;
-    if (user?.id === 'proto-tiago-001') {
-      setTotalLeads(leads.length);
-      return;
-    }
     try {
       const q = query(collection(db, 'leads'), where('user_id', '==', user.id));
       const querySnapshot = await getDocs(q);
@@ -1098,14 +784,10 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
     } catch (e) {
       handleFirestoreError(e, OperationType.GET, 'leads/count');
     }
-  }, [user?.id, leads.length]);
+  }, [user?.id]);
 
   const fetchTransactions = useCallback(async () => {
     if (!user?.id) return;
-    if (user?.id === 'proto-tiago-001') {
-      setTransactions([{ id: 'tx1', type: 'income', amount: 1500, description: 'Serviço Porsche', category: 'Vendas', paymentMethod: 'Pix', date: new Date().toISOString() }]);
-      return;
-    }
     try {
       const q = query(collection(db, 'transactions'), where('user_id', '==', user.id));
       const querySnapshot = await getDocs(q);
@@ -1118,10 +800,6 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
 
   const addTransaction = useCallback(async (tx: any) => {
     if (!user?.id) return { success: false, error: "Auth" };
-    if (user?.id === 'proto-tiago-001') {
-      setTransactions(prev => [{ ...tx, id: `tx-${Date.now()}` }, ...prev]);
-      return { success: true, error: null };
-    }
     try {
       const docRef = await addDoc(collection(db, 'transactions'), { ...tx, user_id: user.id });
       setTransactions(prev => [{ id: docRef.id, ...tx, user_id: user.id }, ...prev]);
@@ -1133,13 +811,6 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
 
   const fetchQuotes = useCallback(async () => {
     if (!user?.id) return;
-    if (user?.id === 'proto-tiago-001') {
-      setQuotes([
-        { id: 'quote1', customerName: 'João Cliente', vehicleModel: 'Porsche 911', items: [], totalAmount: 12000, status: 'Approved', createdAt: new Date().toISOString(), projectType: 'Automotive' },
-        { id: 'quote2', customerName: 'Edifício Luxo', vehicleModel: '', items: [], totalAmount: 45000, status: 'Pending', createdAt: new Date(Date.now() - 86400000).toISOString(), projectType: 'Architecture' },
-      ]);
-      return;
-    }
     try {
       const q = query(collection(db, 'quotes'), where('user_id', '==', user.id));
       const querySnapshot = await getDocs(q);
@@ -1152,10 +823,6 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
 
   const addQuote = useCallback(async (quote: any) => {
     if (!user?.id) return { success: false, error: "Auth" };
-    if (user?.id === 'proto-tiago-001') {
-      setQuotes(prev => [{ ...quote, id: `quote-${Date.now()}`, createdAt: new Date().toISOString(), status: 'Pending' }, ...prev]);
-      return { success: true, error: null };
-    }
     try {
       const docRef = await addDoc(collection(db, 'quotes'), { ...quote, user_id: user.id, status: 'Pending', createdAt: new Date().toISOString() });
       setQuotes(prev => [{ id: docRef.id, ...quote, user_id: user.id, status: 'Pending', createdAt: new Date().toISOString() }, ...prev]);
@@ -1198,10 +865,6 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
   }, [quotes, user?.id, gamify]);
 
   const updateQuote = useCallback(async (id: string, updates: any) => {
-    if (user?.id === 'proto-tiago-001') {
-      setQuotes(prev => prev.map(q => q.id === id ? { ...q, ...updates } : q));
-      return { success: true, error: null };
-    }
     try {
       await updateDoc(doc(db, 'quotes', id), updates);
       setQuotes(prev => prev.map(q => q.id === id ? { ...q, ...updates } : q));
@@ -1213,13 +876,6 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
 
   const fetchStockItems = useCallback(async () => {
     if (!user?.id) return;
-    if (user?.id === 'proto-tiago-001') {
-      setStockItems([
-        { id: 'stock1', user_id: user.id, product_id: 'prod2', product_name: 'Winf Invisible®', total_meters: 30, width: 1.52, remaining_meters: 24.5, created_at: new Date().toISOString() },
-        { id: 'stock2', user_id: user.id, product_id: 'prod4', product_name: 'Winf BlackPro®', total_meters: 30, width: 1.52, remaining_meters: 12.0, created_at: new Date().toISOString() },
-      ]);
-      return;
-    }
     try {
       const q = query(collection(db, 'stock_items'), where('user_id', '==', user.id));
       const querySnapshot = await getDocs(q);
@@ -1232,14 +888,6 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
 
   const updateStock = useCallback(async (id: string, metersUsed: number) => {
     if (!user?.id) return { success: false, error: "Auth" };
-    if (user?.id === 'proto-tiago-001') {
-      const item = stockItems.find(i => i.id === id);
-      setStockItems(prev => prev.map(item => item.id === id ? { ...item, remaining_meters: Math.max(0, item.remaining_meters - metersUsed) } : item));
-      if (item) {
-        setStockHistory(prev => [{ id: `hist-${Date.now()}`, user_id: user.id, product_id: item.product_id, product_name: item.product_name, type: 'OUT', amount: metersUsed, date: new Date().toISOString() }, ...prev]);
-      }
-      return { success: true, error: null };
-    }
     try {
       const docRef = doc(db, 'stock_items', id);
       const docSnap = await getDoc(docRef);
@@ -1266,14 +914,6 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
 
   const fetchPartnerTasks = useCallback(async () => {
     if (!user?.id) return;
-    if (user?.id === 'proto-tiago-001') {
-      setPartnerTasks([
-        { id: 'task1', user_id: user.id, title: 'Revisar Leads da Porsche', description: 'Fazer follow-up com os leads quentes do Instagram.', priority: 'HIGH', status: 'PENDING', category: 'SALES', created_at: new Date().toISOString() },
-        { id: 'task2', user_id: user.id, title: 'Treinamento AeroCore', description: 'Completar o módulo técnico de instalação.', priority: 'MEDIUM', status: 'IN_PROGRESS', category: 'TECHNICAL', created_at: new Date().toISOString() },
-        { id: 'task3', user_id: user.id, title: 'Reposição de Estoque', description: 'Pedir mais rolos de Winf Invisible.', priority: 'CRITICAL', status: 'PENDING', category: 'ADMIN', created_at: new Date().toISOString() },
-      ]);
-      return;
-    }
     try {
       const q = query(collection(db, 'partner_tasks'), where('user_id', '==', user.id));
       const querySnapshot = await getDocs(q);
@@ -1285,7 +925,7 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
   }, [user?.id]);
 
   const fetchAgentInsights = useCallback(async () => {
-    if (!user?.id || user.id === 'proto-tiago-001') return;
+    if (!user?.id) return;
     try {
       const q = query(collection(db, 'agent_insights'), where('user_id', '==', user.id), orderBy('created_at', 'desc'));
       const querySnapshot = await getDocs(q);
@@ -1297,7 +937,7 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
   }, [user?.id]);
 
   const markInsightAsRead = useCallback(async (id: string) => {
-    if (!user?.id || user.id === 'proto-tiago-001') return { success: true, error: null };
+    if (!user?.id) return { success: true, error: null };
     try {
       await updateDoc(doc(db, 'agent_insights', id), { is_read: true });
       setAgentInsights(prev => prev.map(i => i.id === id ? { ...i, is_read: true } : i));
@@ -1310,11 +950,6 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
 
   const addPartnerTask = useCallback(async (task: any) => {
     if (!user?.id) return { success: false, error: "Auth" };
-    if (user?.id === 'proto-tiago-001') {
-      const newTask: PartnerTask = { ...task, id: `task-${Date.now()}`, user_id: user.id, created_at: new Date().toISOString(), status: 'PENDING' };
-      setPartnerTasks(prev => [newTask, ...prev]);
-      return { success: true, error: null };
-    }
     try {
       const docRef = await addDoc(collection(db, 'partner_tasks'), { ...task, user_id: user.id });
       setPartnerTasks(prev => [{ id: docRef.id, ...task, user_id: user.id } as PartnerTask, ...prev]);
@@ -1325,10 +960,6 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
   }, [user?.id]);
 
   const updatePartnerTask = useCallback(async (id: string, updates: any) => {
-    if (user?.id === 'proto-tiago-001') {
-      setPartnerTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
-      return { success: true, error: null };
-    }
     try {
       await updateDoc(doc(db, 'partner_tasks', id), updates);
       setPartnerTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } as PartnerTask : t));
@@ -1339,10 +970,6 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
   }, [user?.id]);
 
   const deletePartnerTask = useCallback(async (id: string) => {
-    if (user?.id === 'proto-tiago-001') {
-      setPartnerTasks(prev => prev.filter(t => t.id !== id));
-      return { success: true, error: null };
-    }
     try {
       await deleteDoc(doc(db, 'partner_tasks', id));
       setPartnerTasks(prev => prev.filter(t => t.id !== id));
@@ -1351,6 +978,32 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
       return { success: false, error: e.message };
     }
   }, [user?.id]);
+
+  const toggleFavoriteModule = useCallback((moduleId: string) => {
+    setFavoriteModules(prev => 
+      prev.includes(moduleId) 
+        ? prev.filter(id => id !== moduleId) 
+        : [...prev, moduleId]
+    );
+  }, []);
+
+  const fetchClaudeInsight = useCallback(async (prompt: string, context?: string): Promise<string> => {
+    try {
+      const systemPrompt = `Você é o Cérebro Central WINF™ baseado em Claude AI. 
+      Sua missão é orquestrar o crescimento de licenciados de alta performance.
+      Contexto adicional: ${context || 'Nenhum'}`;
+      
+      const response = await generateResponse(prompt, 'claude', systemPrompt);
+      return response;
+    } catch (error) {
+      console.error('Claude Insight Error:', error);
+      return 'Erro na conexão neural com o Cérebro Central.';
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('winf_favorites', JSON.stringify(favoriteModules));
+  }, [favoriteModules]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -1419,7 +1072,7 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
     userModuleProgress, platformEvents, members, userPerformanceMetrics, contentCalendarEvents, documentItems, transactions, quotes,
     stockItems, stockHistory, trainingModules, partnerTasks,
     totalLeads, totalMembers, totalOrders, recentActivities,
-    login, loginAsPrototype, logout, updateUserCoins, gamify, closeNotification,
+    login, logout, loginAsPrototype, updateUserCoins, gamify, closeNotification,
     uploadFileToStorage: async () => ({ url: null, error: 'Not implemented' }),
     fetchLeads, fetchPublicLeads, addLead, updateLead, deleteLead,
     publicLeads,
@@ -1444,6 +1097,7 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
     fetchStockItems, updateStock, addStockItem, fetchTrainingModules,
     fetchPartnerTasks, addPartnerTask, updatePartnerTask, deletePartnerTask,
     agentInsights, fetchAgentInsights, markInsightAsRead,
+    fetchClaudeInsight,
     fetchTotalLeads, fetchTotalMembers: async () => {}, fetchTotalOrders: async () => {}, fetchRecentActivities: async () => {},
     fetchInstallationById, fetchWarrantyBySerialNumber,
     fetchUserPerformanceMetrics: async () => {}, fetchContentCalendarEvents: async () => {}, addContentCalendarEvent: async () => ({ success: true, error: null }),
@@ -1457,7 +1111,9 @@ A calibração do plotter deve ser feita semanalmente. O uso de insumos não-hom
     installationJobs,
     addInstallationJob,
     updateInstallationJob,
-    completeJobAndGenerateWarranty
+    completeJobAndGenerateWarranty,
+    favoriteModules,
+    toggleFavoriteModule
   };
 
   return <WinfContext.Provider value={contextValue}>{children}</WinfContext.Provider>;

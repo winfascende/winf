@@ -34,6 +34,7 @@ const ModuleConnect = lazy(() => import('./components/ModuleConnect'));
 const ModuleConsultancyLink = lazy(() => import('./components/ModuleConsultancyLink'));
 const ModuleFAQ = lazy(() => import('./components/ModuleFAQ'));
 const ModuleProducts = lazy(() => import('./components/ModuleProducts'));
+const ModuleBlackshop = lazy(() => import('./components/ModuleBlackshop'));
 const ModuleBlackshopAdmin = lazy(() => import('./components/ModuleBlackshopAdmin'));
 const ModuleInstallations = lazy(() => import('./components/ModuleInstallations'));
 const ModuleWarranties = lazy(() => import('./components/ModuleWarranties'));
@@ -46,11 +47,14 @@ const ModuleWinfWorld = lazy(() => import('./components/ModuleWinfWorld'));
 const ModuleControlRoom = lazy(() => import('./components/ModuleControlRoom'));
 const PublicConsultancy = lazy(() => import('./components/PublicConsultancy'));
 const MemberOnePage = lazy(() => import('./components/MemberOnePage')); 
+const CityOnePage = lazy(() => import('./components/CityOnePage')); 
 const LandingParceria = lazy(() => import('./components/LandingParceria'));
 const LandingLicenciamento = lazy(() => import('./components/LandingLicenciamento'));
 const LandingKiosk = lazy(() => import('./components/LandingKiosk'));
 const LandingStudio = lazy(() => import('./components/LandingStudio'));
+const LandingAerocore = lazy(() => import('./components/LandingAerocore'));
 const LandingUniversoDark = lazy(() => import('./components/LandingUniversoDark'));
+const LandingWinfSelectElite = lazy(() => import('./components/LandingWinfSelectElite'));
 const ArchitectRegistration = lazy(() => import('./components/ArchitectRegistration'));
 const AccessForm = lazy(() => import('./components/AccessForm'));
 const ModuleFinancial = lazy(() => import('./components/ModuleFinancial'));
@@ -69,11 +73,15 @@ const ModuleKioskMode = lazy(() => import('./components/ModuleKioskMode'));
 const DashboardWRank = lazy(() => import('./components/DashboardWRank'));
 const GlobalSearch = lazy(() => import('./components/GlobalSearch'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
+const ModuleMolecularTwin = lazy(() => import('./components/ModuleMolecularTwin'));
 
 
 import { ViewState, ChartDataPoint } from './types';
 import { useWinf } from './contexts/WinfContext';
 import { logPageView } from './lib/analytics';
+import { PRODUCT_CATALOG } from './data/productCatalogData';
+
+const LandingProductLayout = lazy(() => import('./components/LandingProductLayout'));
 
 const CHART_DATA: ChartDataPoint[] = [
   { name: 'Jan', value: 4000, secondary: 2400 },
@@ -90,8 +98,19 @@ const DEMO_MODE = process.env.DEMO_MODE === 'true';
 const App: React.FC = () => {
   const { user, isAuthenticated, logout, notification, closeNotification, gamify, updateUserCoins, loginAsPrototype } = useWinf();
   const [currentView, setCurrentView] = useState<ViewState>(ViewState.DASHBOARD_WINF);
+  const [previousView, setPreviousView] = useState<ViewState>(ViewState.DASHBOARD_WINF);
   const [selectedInstallationId, setSelectedInstallationId] = useState<string | undefined>();
   const [currentMarketingView, setCurrentMarketingView] = useState<ViewState | null>(DEMO_MODE ? null : ViewState.LANDING_PAGE);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string>('Santos');
+  const [consultancyTerritory, setConsultancyTerritory] = useState<string>('Santos (Piloto)');
+
+  const handleNavigate = (view: ViewState) => {
+    if (view !== ViewState.SEARCH) {
+      setPreviousView(currentView);
+    }
+    setCurrentView(view);
+  };
 
   useEffect(() => {
     // Handle public certificate route
@@ -142,80 +161,97 @@ const App: React.FC = () => {
     
     switch (currentView) {
       case ViewState.INSTITUTIONAL_SITE:
-        return <InstitutionalSite territory={user?.territory || 'Santos'} onBack={() => setCurrentView(ViewState.MODULE_ARSENAL)} onNavigateToAccess={(view) => setCurrentView(view || ViewState.PROFILE)} onNavigateToCatalog={() => setCurrentView(ViewState.PRODUCTS_CATALOG)} />;
+        return <InstitutionalSite territory={user?.territory || 'Santos'} onBack={() => handleNavigate(ViewState.MODULE_ARSENAL)} onNavigateToAccess={(view) => handleNavigate(view || ViewState.PROFILE)} onNavigateToCatalog={() => handleNavigate(ViewState.PRODUCTS_CATALOG)} />;
       case ViewState.ABOUT_US:
-        return <AboutUs onBack={() => setCurrentView(ViewState.DASHBOARD_WINF)} />;
+        return <AboutUs onBack={() => handleNavigate(ViewState.DASHBOARD_WINF)} />;
       case ViewState.PUBLIC_CONSULTANCY:
-        return <PublicConsultancy partnerName={user?.name} partnerPhone={user?.phone} onBack={() => setCurrentView(ViewState.MODULE_CONSULTANCY_LINK)} onAccessSystem={() => setCurrentView(ViewState.DASHBOARD_WINF)} />;
+        return <PublicConsultancy 
+          partnerName={user?.name} 
+          partnerPhone={user?.phone} 
+          territory={consultancyTerritory}
+          onBack={() => handleNavigate(ViewState.MODULE_CONSULTANCY_LINK)} 
+          onAccessSystem={() => handleNavigate(ViewState.DASHBOARD_WINF)} 
+        />;
       case ViewState.MODULE_CONSULTANCY_LINK:
-        return <ModuleConsultancyLink user={user} onBack={() => setCurrentView(ViewState.MODULES)} onOpenConsultancy={() => setCurrentView(ViewState.PUBLIC_CONSULTANCY)} />;
+        return <ModuleConsultancyLink 
+          user={user} 
+          onBack={() => handleNavigate(ViewState.MODULES)} 
+          onOpenConsultancy={(territory) => {
+            setConsultancyTerritory(territory);
+            handleNavigate(ViewState.PUBLIC_CONSULTANCY);
+          }} 
+        />;
       case ViewState.MODULE_WINF_CUT:
-        return <ModuleWinfPrecision onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleWinfPrecision onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_STOCK:
-        return <ModuleStock onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleStock onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_THE_BOARD:
-        return <ModuleTheBoard onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleTheBoard onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_FINANCIAL:
-        return <ModuleFinancial onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleFinancial onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_MISSION_CONTROL:
-        return <ModuleMissionControl onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleMissionControl onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_TASKS:
-        return <ModuleTasks onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleTasks onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_WHATSAPP_HUB:
-        return <ModuleWhatsAppHub onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleWhatsAppHub onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_INTEGRATIONS:
         return <ModuleIntegrations />;
       case ViewState.MODULE_NEURAL_BRIDGE:
-        return <ModuleNeuralBridge onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleNeuralBridge onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_NEURO_PARADOX:
-        return <ModuleNeuroParadox onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleNeuroParadox onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_NEURAL_FLOW:
-        return <ModuleNeuralFlow onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleNeuralFlow onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_SQUAD_PERFORMANCE:
-        return <ModuleSquadPerformance onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleSquadPerformance onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_ARCHITECTURAL:
-        return <ModuleArchitecturalPro onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleArchitecturalPro onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_ESCAPE_3D:
-        return <ModuleEscape3D onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleEscape3D onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_BIOMETRIC:
-        return <ModuleBiometricInvite onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleBiometricInvite onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_KIOSK_MODE:
-        return <ModuleKioskMode onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleKioskMode onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_ACADEMY:
-        return <ModuleAcademy />;
+        return <ModuleAcademy onNavigate={handleNavigate} />;
       case ViewState.MODULE_CONNECT:
-        return <ModuleConnect onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleConnect onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.DASHBOARD_WINF:
-        return <DashboardWinf data={CHART_DATA} user={user!} onChangeView={setCurrentView} />;
+        return <DashboardWinf data={CHART_DATA} user={user!} onChangeView={handleNavigate} />;
       // Fix: Add W_RANK case
       case ViewState.W_RANK:
         return <DashboardWRank />;
       case ViewState.MODULE_ARSENAL:
-        return <ModuleArsenal onBack={() => setCurrentView(ViewState.MODULES)} onNavigate={setCurrentView} />;
+        return <ModuleArsenal onBack={() => handleNavigate(ViewState.MODULES)} onNavigate={handleNavigate} />;
       case ViewState.SALES_FUNNEL:
         return <SalesFunnel user={user!} />;
       case ViewState.WARRANTY:
         return <WarrantySystem />;
       case ViewState.MODULE_CAPTURE:
-        return <ModuleCaptureSystem onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleCaptureSystem onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_NEUROMESH:
-        return <ModuleNeuroMesh onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleNeuroMesh onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULES:
-        return <ModulesList onNavigate={setCurrentView} userRole={user?.role} />;
+        return <ModulesList onNavigate={handleNavigate} userRole={user?.role} />;
       case ViewState.PROFILE:
-        return <MemberOnePage user={user!} onBack={() => setCurrentView(ViewState.DASHBOARD_WINF)} />;
+        return <MemberOnePage user={user!} onBack={() => handleNavigate(ViewState.DASHBOARD_WINF)} />;
+      case ViewState.CITY_ONE_PAGE:
+        return <CityOnePage city={selectedCity} partnerName={user?.name} partnerAvatar={user?.avatar} onBack={() => handleNavigate(ViewState.DASHBOARD_WINF)} />;
       case ViewState.DASHBOARD_WINFCOIN:
         return <DashboardWinfCoin user={user!} onRedeem={handleRedeem} />;
       case ViewState.MODULE_DATA_CORE:
-        return <ModuleDataCore onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleDataCore onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_QUOTES:
-        return <ModuleQuotes onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleQuotes onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_PRICE_TABLE:
-        return <ModulePriceTable onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModulePriceTable onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_FAQ:
-        return <ModuleFAQ onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ModuleFAQ onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.MODULE_BLACKSHOP_ADMIN:
         return <ModuleBlackshopAdmin />;
+      case ViewState.MODULE_BLACKSHOP:
+        return <ModuleBlackshop />;
       case ViewState.MODULE_PRODUCTS:
         return <ModuleProducts />;
       case ViewState.MODULE_INSTALLATIONS:
@@ -233,17 +269,19 @@ const App: React.FC = () => {
       case ViewState.MODULE_CONTROL_ROOM:
         return <ModuleControlRoom />;
       case ViewState.PUBLIC_PORTAL:
-        return <PublicPortal onBack={() => setCurrentView(ViewState.MODULE_ARSENAL)} onNavigateToLogin={() => setCurrentView(ViewState.PROFILE)} onNavigateToCatalog={() => setCurrentView(ViewState.PRODUCTS_CATALOG)} />;
+        return <PublicPortal onBack={() => handleNavigate(ViewState.MODULE_ARSENAL)} onNavigateToLogin={() => handleNavigate(ViewState.PROFILE)} onNavigateToCatalog={() => handleNavigate(ViewState.PRODUCTS_CATALOG)} />;
       case ViewState.CERTIFICATE_VIEWER:
         return <CertificateViewer id={selectedInstallationId} />;
       case ViewState.PRODUCTS_CATALOG:
-        return <ProductsCatalog onBack={() => setCurrentView(ViewState.MODULES)} />;
+        return <ProductsCatalog onBack={() => handleNavigate(ViewState.MODULES)} />;
       case ViewState.SEARCH:
-        return <GlobalSearch onClose={() => setCurrentView(ViewState.DASHBOARD_WINF)} onNavigate={setCurrentView} />;
+        return <GlobalSearch onClose={() => setCurrentView(previousView)} onNavigate={handleNavigate} />;
       case ViewState.ADMIN_PANEL:
-        return <AdminPanel onBack={() => setCurrentView(ViewState.DASHBOARD_WINF)} />;
+        return <AdminPanel onBack={() => handleNavigate(ViewState.DASHBOARD_WINF)} />;
+      case ViewState.MODULE_MOLECULAR_TWIN:
+        return <ModuleMolecularTwin onBack={() => handleNavigate(ViewState.MODULES)} />;
       default:
-        return <DashboardWinf data={CHART_DATA} user={user!} onChangeView={setCurrentView} />;
+        return <DashboardWinf data={CHART_DATA} user={user!} onChangeView={handleNavigate} />;
     }
   };
 
@@ -308,10 +346,12 @@ const App: React.FC = () => {
             onActivate={() => setCurrentMarketingView(ViewState.ACCESS_FORM)}
           />
         )}
+        {currentMarketingView === ViewState.LANDING_AEROCORE && <LandingAerocore onBack={() => setCurrentMarketingView(ViewState.LANDING_PAGE)} />}
+        {currentMarketingView === ViewState.LANDING_WINF_SELECT_ELITE && <LandingWinfSelectElite onBack={() => setCurrentMarketingView(ViewState.LANDING_PAGE)} onAddToCart={() => window.alert('Winf Select™ IR-99 (Elite) adicionado ao carrinho com sucesso!')} />}
         {currentMarketingView === ViewState.LANDING_UNIVERSO_DARK && <LandingUniversoDark onBack={() => setCurrentMarketingView(ViewState.LANDING_PAGE)} />}
         {currentMarketingView === ViewState.ACCESS_FORM && <AccessForm onBack={() => setCurrentMarketingView(ViewState.LANDING_PAGE)} />}
         {currentMarketingView === ViewState.ARCHITECT_REGISTRATION && <ArchitectRegistration onBack={() => setCurrentMarketingView(ViewState.LANDING_PAGE)} />}
-        {currentMarketingView === ViewState.INSTITUTIONAL_SITE && <InstitutionalSite onBack={() => setCurrentMarketingView(ViewState.LANDING_PAGE)} onNavigateToAccess={(view) => setCurrentMarketingView(view || ViewState.ACCESS_FORM)} onNavigateToCatalog={() => setCurrentMarketingView(ViewState.PRODUCTS_CATALOG)} />}
+        {currentMarketingView === ViewState.INSTITUTIONAL_SITE && <InstitutionalSite onBack={() => setCurrentMarketingView(ViewState.LANDING_PAGE)} onNavigateToAccess={(view) => setCurrentMarketingView(view || ViewState.ACCESS_FORM)} onNavigateToCatalog={() => setCurrentMarketingView(ViewState.PRODUCTS_CATALOG)} onSelectProduct={(id) => { setSelectedProductId(id); setCurrentMarketingView(ViewState.PRODUCT_LANDING); }} />}
         {currentMarketingView === ViewState.ABOUT_US && <AboutUs onBack={() => setCurrentMarketingView(ViewState.LANDING_PAGE)} />}
         {currentMarketingView === ViewState.PUBLIC_CONSULTANCY && <PublicConsultancy onBack={() => setCurrentMarketingView(ViewState.LANDING_PAGE)} onAccessSystem={() => setCurrentMarketingView(ViewState.LOGIN)} />}
         {currentMarketingView === ViewState.PUBLIC_PORTAL && (
@@ -321,7 +361,21 @@ const App: React.FC = () => {
             onNavigateToCatalog={() => setCurrentMarketingView(ViewState.PRODUCTS_CATALOG)}
           />
         )}
-        {currentMarketingView === ViewState.PRODUCTS_CATALOG && <ProductsCatalog onBack={() => setCurrentMarketingView(ViewState.LANDING_PAGE)} />}
+        {currentMarketingView === ViewState.PRODUCTS_CATALOG && (
+          <ProductsCatalog 
+            onBack={() => setCurrentMarketingView(ViewState.LANDING_PAGE)} 
+            onSelectProduct={(id) => {
+              setSelectedProductId(id);
+              setCurrentMarketingView(ViewState.PRODUCT_LANDING);
+            }}
+          />
+        )}
+        {currentMarketingView === ViewState.PRODUCT_LANDING && selectedProductId && (
+          <LandingProductLayout 
+            product={PRODUCT_CATALOG.find(p => p.id === selectedProductId)!}
+            onBack={() => setCurrentMarketingView(ViewState.PRODUCTS_CATALOG)}
+          />
+        )}
         {!currentMarketingView || currentMarketingView === ViewState.LANDING_PAGE ? <LandingPage onEnter={handleEnterApp} onNavigateToMarketingPage={handleNavigateToMarketingPage} /> : null}
       </Suspense>
     );
@@ -350,7 +404,7 @@ const App: React.FC = () => {
     }>
       <Layout 
         currentView={currentView}
-        onChangeView={setCurrentView}
+        onChangeView={handleNavigate}
         user={user}
         onLogout={logout}
         notification={notification}

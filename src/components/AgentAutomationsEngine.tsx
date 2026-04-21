@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useWinf } from '../contexts/WinfContext';
-import { generateClaudeResponse } from '../lib/claude';
-import { collection, addDoc, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
+import { generateResponse } from '../services/aiService';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { differenceInDays } from 'date-fns';
 
@@ -16,7 +16,7 @@ const AgentAutomationsEngine: React.FC = () => {
   const processedEntities = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    if (!user?.id || user.id === 'proto-tiago-001') return;
+    if (!user?.id) return;
 
     const runAutomations = async () => {
       // 1. Estoque baixo → Claude detecta e envia alerta + sugere pedido automático
@@ -29,13 +29,13 @@ const AgentAutomationsEngine: React.FC = () => {
           const prompt = `O parceiro ${user.name} está com estoque baixo do produto ${item.product_name} (apenas ${item.remaining_meters} metros restantes). Gere um alerta curto e direto sugerindo um pedido de reposição.`;
           const system = "Você é o WINF CORE AI, o assistente proativo do parceiro. Seja direto, profissional e focado em vendas.";
           
-          const response = await generateClaudeResponse(prompt, system);
-          if (response.text) {
+          const message = await generateResponse(prompt, 'claude', system);
+          if (message) {
             await addDoc(collection(db, 'agent_insights'), {
               user_id: user.id,
               type: 'STOCK_ALERT',
               title: `Estoque Crítico: ${item.product_name}`,
-              content: response.text,
+              content: message,
               related_entity_id: item.id,
               is_read: false,
               created_at: serverTimestamp()
@@ -54,13 +54,13 @@ const AgentAutomationsEngine: React.FC = () => {
           const prompt = `Um novo lead chegou: Nome: ${lead.name}, Interesse: ${lead.interest}, Origem: ${lead.source}. Gere um roteiro de abordagem curto e persuasivo para o WhatsApp, focado em conversão.`;
           const system = "Você é o WINF SALES AI, especialista em conversão de leads automotivos e arquitetônicos.";
           
-          const response = await generateClaudeResponse(prompt, system);
-          if (response.text) {
+          const message = await generateResponse(prompt, 'claude', system);
+          if (message) {
             await addDoc(collection(db, 'agent_insights'), {
               user_id: user.id,
               type: 'LEAD_SCRIPT',
               title: `Roteiro de Abordagem: ${lead.name}`,
-              content: response.text,
+              content: message,
               related_entity_id: lead.id,
               is_read: false,
               created_at: serverTimestamp()
@@ -79,13 +79,13 @@ const AgentAutomationsEngine: React.FC = () => {
           const prompt = `O orçamento para ${quote.customerName} no valor de R$ ${quote.totalAmount} foi enviado há mais de 3 dias e ainda não teve resposta. Gere uma mensagem de follow-up educada e persuasiva para o WhatsApp.`;
           const system = "Você é o WINF SALES AI, especialista em fechamento de vendas.";
           
-          const response = await generateClaudeResponse(prompt, system);
-          if (response.text) {
+          const message = await generateResponse(prompt, 'claude', system);
+          if (message) {
             await addDoc(collection(db, 'agent_insights'), {
               user_id: user.id,
               type: 'QUOTE_FOLLOWUP',
               title: `Follow-up Necessário: ${quote.customerName}`,
-              content: response.text,
+              content: message,
               related_entity_id: quote.id,
               is_read: false,
               created_at: serverTimestamp()
@@ -105,13 +105,13 @@ const AgentAutomationsEngine: React.FC = () => {
           const prompt = `Estamos no dia ${currentDay} do mês e as vendas aprovadas do parceiro ${user.name} estão em apenas R$ ${totalSales}. A meta mensal está em risco. Gere um alerta motivacional e sugira 2 ações comerciais rápidas para reverter o cenário.`;
           const system = "Você é o WINF DATA AI, diretor comercial estratégico da rede.";
           
-          const response = await generateClaudeResponse(prompt, system);
-          if (response.text) {
+          const message = await generateResponse(prompt, 'claude', system);
+          if (message) {
             await addDoc(collection(db, 'agent_insights'), {
               user_id: user.id,
               type: 'GOAL_RISK',
               title: `Alerta Estratégico: Meta em Risco`,
-              content: response.text,
+              content: message,
               is_read: false,
               created_at: serverTimestamp()
             });
@@ -129,13 +129,13 @@ const AgentAutomationsEngine: React.FC = () => {
           const prompt = `O parceiro ${user.name} acabou de entrar na rede WINF e ainda não tem vendas ou estoque registrado. Gere uma mensagem de boas-vindas empolgante e sugira os 3 primeiros passos que ele deve dar no sistema.`;
           const system = "Você é o WINF CONCIERGE AI, responsável pelo sucesso do parceiro (Customer Success).";
           
-          const response = await generateClaudeResponse(prompt, system);
-          if (response.text) {
+          const message = await generateResponse(prompt, 'claude', system);
+          if (message) {
             await addDoc(collection(db, 'agent_insights'), {
               user_id: user.id,
               type: 'ONBOARDING',
               title: `Bem-vindo à WINF, ${user.name}!`,
-              content: response.text,
+              content: message,
               is_read: false,
               created_at: serverTimestamp()
             });

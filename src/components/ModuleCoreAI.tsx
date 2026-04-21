@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Brain, MessageSquare, LineChart, ShieldCheck, Settings, Database, Activity, Network, Send, Bot, User as UserIcon, Loader2 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
 import { useWinf } from '../contexts/WinfContext';
+import { generateResponse } from '../services/aiService';
 import { collection, query, where, orderBy, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 
@@ -94,7 +94,7 @@ const AGENTS = [
 ];
 
 const ModuleCoreAI: React.FC = () => {
-  const { user, leads, stockItems, installations } = useWinf();
+  const { user, leads, stockItems, installations, fetchClaudeInsight } = useWinf();
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<{ id?: string, role: 'user' | 'ai', text: string }[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -110,7 +110,7 @@ const ModuleCoreAI: React.FC = () => {
 
   // Load chat history from Firestore
   useEffect(() => {
-    if (!user?.id || user.id === 'proto-tiago-001') return;
+    if (!user?.id) return;
 
     const loadHistory = async () => {
       try {
@@ -168,7 +168,7 @@ Seja proativo, técnico, estratégico e focado em gerar resultados para o parcei
 
     try {
       // Save user message to Firestore
-      if (user?.id && user.id !== 'proto-tiago-001') {
+      if (user?.id) {
         await addDoc(collection(db, 'core_ai_chats'), {
           user_id: user.id,
           role: 'user',
@@ -177,36 +177,13 @@ Seja proativo, técnico, estratégico e focado em gerar resultados para o parcei
         });
       }
 
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      
-      // Initialize chat with history
-      const chat = ai.chats.create({
-        model: "gemini-2.5-flash",
-        config: {
-          systemInstruction: generateSystemPrompt(),
-        },
-        history: messages.map(m => ({
-          role: m.role === 'ai' ? 'model' : 'user',
-          parts: [{ text: m.text }]
-        }))
-      });
+      setIsTyping(true);
+      const fullText = await fetchClaudeInsight(userMsg, generateSystemPrompt());
 
-      const streamResponse = await chat.sendMessageStream({ message: userMsg });
-
-      let fullText = "";
-      setMessages(prev => [...prev, { role: 'ai', text: '' }]);
-
-      for await (const chunk of streamResponse) {
-        fullText += chunk.text;
-        setMessages(prev => {
-          const newMsgs = [...prev];
-          newMsgs[newMsgs.length - 1].text = fullText;
-          return newMsgs;
-        });
-      }
+      setMessages(prev => [...prev, { role: 'ai', text: fullText }]);
 
       // Save AI response to Firestore
-      if (user?.id && user.id !== 'proto-tiago-001') {
+      if (user?.id) {
         await addDoc(collection(db, 'core_ai_chats'), {
           user_id: user.id,
           role: 'ai',

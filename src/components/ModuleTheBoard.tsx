@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { Users, Shield, Map, CreditCard, Search, MoreVertical, CheckCircle, XCircle, Mail, Phone, ExternalLink, Award, Zap, ChevronRight } from 'lucide-react';
+import { Users, Shield, Map, CreditCard, Search, MoreVertical, CheckCircle, XCircle, Mail, Phone, ExternalLink, Award, Zap, ChevronRight, Package, TrendingUp, DollarSign } from 'lucide-react';
 import { useWinf } from '../contexts/WinfContext';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface ModuleTheBoardProps {
     onBack?: () => void;
@@ -12,6 +12,7 @@ const ModuleTheBoard: React.FC<ModuleTheBoardProps> = ({ onBack }) => {
     const { members, updateUserCoins } = useWinf();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedMember, setSelectedMember] = useState<any>(null);
+    const [activeTab, setActiveTab] = useState<'MEMBERS' | 'STOCK'>('MEMBERS');
 
     const filteredMembers = members.filter(m => 
         m.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -21,9 +22,88 @@ const ModuleTheBoard: React.FC<ModuleTheBoardProps> = ({ onBack }) => {
     const handleGrantCoins = async (memberId: string) => {
         const amount = prompt("Quantidade de WinfCoins a conceder:");
         if (amount && !isNaN(parseInt(amount))) {
-            // In a real app, this would be a specific admin function
             alert(`Concedendo ${amount} WinfCoins para o membro.`);
         }
+    };
+
+    const renderStockTab = () => {
+        return (
+            <div className="space-y-8 animate-fade-in">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-winf-surface border border-winf-border p-6 rounded-3xl">
+                        <div className="w-12 h-12 bg-winf-primary/10 rounded-full flex items-center justify-center text-winf-primary mb-4">
+                            <Package size={24} />
+                        </div>
+                        <p className="text-[10px] text-winf-text_muted uppercase font-black tracking-widest mb-1">Rolos Consumidos (Mês)</p>
+                        <h3 className="text-3xl font-bold text-winf-text_primary">1.450</h3>
+                        <p className="text-xs text-green-500 mt-2 flex items-center gap-1"><TrendingUp size={12} /> +12% vs Mês Passado</p>
+                    </div>
+
+                    <div className="bg-winf-surface border border-winf-border p-6 rounded-3xl">
+                        <div className="w-12 h-12 bg-winf-primary/10 rounded-full flex items-center justify-center text-winf-primary mb-4">
+                            <TrendingUp size={24} />
+                        </div>
+                        <p className="text-[10px] text-winf-text_muted uppercase font-black tracking-widest mb-1">Metragem Consumida (m²)</p>
+                        <h3 className="text-3xl font-bold text-winf-text_primary">65.250 m²</h3>
+                        <p className="text-xs text-winf-text_secondary mt-2">Equivalente a 4.000 veículos</p>
+                    </div>
+
+                    <div className="bg-winf-surface border border-winf-primary/30 p-6 rounded-3xl relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <DollarSign size={100} />
+                        </div>
+                        <div className="relative z-10">
+                            <div className="w-12 h-12 bg-winf-primary rounded-full flex items-center justify-center text-winf-background mb-4">
+                                <DollarSign size={24} />
+                            </div>
+                            <p className="text-[10px] text-winf-text_primary uppercase font-black tracking-widest mb-1">Royalties Arrecadados (Mês)</p>
+                            <h3 className="text-3xl font-bold text-winf-primary">R$ 130.500,00</h3>
+                            <p className="text-xs text-winf-text_secondary mt-2">Custo zero fixo para a rede</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-winf-surface border border-winf-border rounded-3xl overflow-hidden">
+                    <div className="p-6 border-b border-winf-border flex justify-between items-center">
+                        <h3 className="text-winf-text_primary font-bold flex items-center gap-2"><Package size={18} className="text-winf-text_muted" /> Solicitações WinfStock</h3>
+                        <button className="text-[10px] uppercase font-black tracking-widest text-winf-primary hover:text-white transition-colors">Aprovar Todos</button>
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm text-winf-text_secondary">
+                            <thead className="bg-winf-background text-[10px] uppercase font-black tracking-widest text-winf-text_muted">
+                                <tr>
+                                    <th className="p-6">Franqueado</th>
+                                    <th className="p-6">Pedido</th>
+                                    <th className="p-6">Quantidade</th>
+                                    <th className="p-6">Royalties Embutidos</th>
+                                    <th className="p-6 text-right">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-winf-border">
+                                {[
+                                    { partner: 'Unidade Santos (Piloto)', item: 'Winf Invisible Cerâmico', qty: '4 Rolos', roy: 'R$ 360,00', status: 'Aguardando Despacho' },
+                                    { partner: 'Praia Grande Studio', item: 'Dual Reflect Arquitetura', qty: '10 Rolos', roy: 'R$ 900,00', status: 'Em Trânsito' },
+                                    { partner: 'Sorocaba Hub', item: 'NeoSkin PPF', qty: '2 Rolos', roy: 'R$ 500,00', status: 'Aguardando Pagamento' },
+                                    { partner: 'Campina Grande Alpha', item: 'Winf Invisible Cerâmico', qty: '3 Rolos', roy: 'R$ 270,00', status: 'Aguardando Despacho' }
+                                ].map((req, i) => (
+                                    <tr key={i} className="hover:bg-winf-background/40 transition-colors">
+                                        <td className="p-6 text-winf-text_primary font-bold">{req.partner}</td>
+                                        <td className="p-6">{req.item}</td>
+                                        <td className="p-6 font-mono text-xs">{req.qty}</td>
+                                        <td className="p-6 text-green-500 font-mono text-xs">{req.roy}</td>
+                                        <td className="p-6 text-right">
+                                            <span className="px-3 py-1 rounded bg-winf-background/40 text-winf-text_muted text-[9px] uppercase tracking-widest font-bold">
+                                                {req.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        );
     };
 
     return (
@@ -44,21 +124,26 @@ const ModuleTheBoard: React.FC<ModuleTheBoardProps> = ({ onBack }) => {
                         <p className="text-winf-text_muted text-sm">Controle Central: Gestão de Membros, Territórios e Performance de Rede.</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-4 bg-winf-surface border border-winf-border px-6 py-3 rounded-2xl">
-                    <div className="text-right">
-                        <p className="text-[10px] text-winf-text_muted uppercase font-black tracking-widest">Total de Membros</p>
-                        <p className="text-winf-text_primary font-bold text-xl">{members.length}</p>
-                    </div>
-                    <div className="w-px h-8 bg-winf-border"></div>
-                    <div className="text-right">
-                        <p className="text-[10px] text-winf-text_muted uppercase font-black tracking-widest">Ativos Hoje</p>
-                        <p className="text-winf-primary font-bold text-xl">12</p>
-                    </div>
+                
+                <div className="flex bg-winf-surface rounded-xl p-1 border border-winf-border">
+                    <button 
+                        onClick={() => setActiveTab('MEMBERS')}
+                        className={`px-6 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'MEMBERS' ? 'bg-winf-background text-winf-text_primary shadow-sm' : 'text-winf-text_muted hover:text-winf-text_secondary'}`}
+                    >
+                        Rede de Franqueados
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('STOCK')}
+                        className={`px-6 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'STOCK' ? 'bg-winf-background text-winf-text_primary shadow-sm' : 'text-winf-text_muted hover:text-winf-text_secondary'}`}
+                    >
+                        Master WinfStock
+                    </button>
                 </div>
             </div>
 
             {/* Main Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {activeTab === 'MEMBERS' ? (
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
                 {/* Members List */}
                 <div className="lg:col-span-8 space-y-6">
                     <div className="bg-winf-surface border border-winf-border rounded-3xl overflow-hidden">
@@ -205,6 +290,9 @@ const ModuleTheBoard: React.FC<ModuleTheBoardProps> = ({ onBack }) => {
                     )}
                 </div>
             </div>
+            ) : (
+                renderStockTab()
+            )}
         </div>
     );
 };

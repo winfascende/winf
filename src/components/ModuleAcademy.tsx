@@ -13,16 +13,20 @@ import {
   ChevronRight, 
   Lock, 
   Search,
-  Coins
+  Coins,
+  TrendingUp,
+  ArrowRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useWinf } from '../contexts/WinfContext';
 import AcademyCertificate from './AcademyCertificate';
+import { ViewState } from '../types';
 
-const ModuleAcademy: React.FC = () => {
+const ModuleAcademy: React.FC<{ onNavigate?: (view: ViewState) => void }> = ({ onNavigate }) => {
     const { user, gamify } = useWinf();
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCourse, setSelectedCourse] = useState<any>(null);
+    const [activeLesson, setActiveLesson] = useState<any>(null);
     const [showCertificate, setShowCertificate] = useState(false);
 
     const courses = [
@@ -73,8 +77,124 @@ const ModuleAcademy: React.FC = () => {
             thumbnail: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&q=80&w=800',
             reward: 30,
             completed: false
+        },
+        {
+            id: 'c5',
+            title: 'Atendimento Humanizado & Especializado',
+            desc: 'Aprenda o fluxo avançado Winf™ de alta conversão. O roteiro do "Especialista" pra aumentar suas vendas organicamente.',
+            duration: '1h 45min',
+            lessons: 5,
+            level: 'Avançado',
+            category: 'Vendas',
+            thumbnail: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=800',
+            reward: 350,
+            completed: false,
+            modules: [
+                { id: 'm1', title: 'O Mindset do Especialista Winf™', duration: '15 min' },
+                { id: 'm2', title: 'Abordagem Humanizada: A Quebra de Gelo', duration: '20 min' },
+                { id: 'm3', title: 'Diagnóstico de Precisão: Fotos e Medidas', duration: '25 min' },
+                { id: 'm4', title: 'Liderando a Conversa e Simplificando Escolhas', duration: '20 min' },
+                { id: 'm5', title: 'O Fechamento Premium e Sincronização WhatsApp', duration: '25 min' }
+            ]
+        },
+        {
+            id: 'c6',
+            title: 'Blindagem Térmica Arquitetônica: Fachadas e Engenharia',
+            desc: 'Aprenda a lidar com grandes projetos, cálculos de TSER e normas técnicas para edifícios corporativos.',
+            duration: '3h 10min',
+            lessons: 7,
+            level: 'Avançado',
+            category: 'Instalação',
+            thumbnail: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&q=80&w=800',
+            reward: 450,
+            completed: false,
+            modules: [
+                { id: 'm1', title: 'Análise de Stress Térmico em Vidros Laminados', duration: '25 min' },
+                { id: 'm2', title: 'Cálculo de ROI Energético para o Cliente', duration: '30 min' },
+                { id: 'm3', title: 'Logística de Instalação em Altura', duration: '20 min' },
+                { id: 'm4', title: 'Especificações Técnicas e Normas ABNT', duration: '35 min' }
+            ]
+        },
+        {
+            id: 'c7',
+            title: 'Neuromarketing: A Psicologia do Fechamento Winf™',
+            desc: 'Entenda os gatilhos mentais que levam clientes de alto padrão a ignorarem o preço e focarem no valor.',
+            duration: '2h 00min',
+            lessons: 6,
+            level: 'Avançado',
+            category: 'Vendas',
+            thumbnail: 'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&q=80&w=800',
+            reward: 300,
+            completed: false,
+            modules: [
+                { id: 'm1', title: 'Gatilhos de Autoridade e Escassez Tática', duration: '20 min' },
+                { id: 'm2', title: 'A Ciência da Decisão Rápida', duration: '25 min' },
+                { id: 'm3', title: 'Criando Valor Invisível no Atendimento', duration: '30 min' }
+            ]
+        },
+        {
+            id: 'c8',
+            title: 'NeoSkin PPF: Proteção de Carroceria Nível 5',
+            desc: 'Domine a arte da aplicação de PPF (Paint Protection Film) sem estiramento ou marcas de adesivo.',
+            duration: '4h 45min',
+            lessons: 10,
+            level: 'Elite',
+            category: 'Instalação',
+            thumbnail: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=800',
+            reward: 600,
+            completed: false,
+            modules: [
+                { id: 'm1', title: 'Preparação Química de Superfície', duration: '30 min' },
+                { id: 'm2', title: 'Termoformagem de Curvas Complexas', duration: '45 min' },
+                { id: 'm3', title: 'Técnicas de Corte "Ghost" no local', duration: '40 min' }
+            ]
+        },
+        {
+            id: 'c9',
+            title: 'W-Rank Growth: Parcerias de Elite com Arquitetos',
+            desc: 'Como prospectar e manter uma rede de arquitetos gerando projetos recorrentes para sua unidade.',
+            duration: '1h 30min',
+            lessons: 5,
+            level: 'Intermediário',
+            category: 'Vendas',
+            thumbnail: 'https://images.unsplash.com/photo-1503387762-592dea58f2af?auto=format&fit=crop&q=80&w=800',
+            reward: 280,
+            completed: false,
+            modules: [
+                { id: 'm1', title: 'O Pitch de Vendas para Escritórios de Luxo', duration: '20 min' },
+                { id: 'm2', title: 'Sistema de Comissionamento e Fidelity', duration: '15 min' },
+                { id: 'm3', title: 'Demonstração Técnica da Grade Molecular', duration: '25 min' }
+            ]
+        },
+        {
+            id: 'c10',
+            title: 'Especialista em Termoformagem: Vidros Convexos',
+            desc: 'Domine o calor e controle o estiramento para vidros de altíssima complexidade (Ex: Porsche Curvos).',
+            duration: '2h 15min',
+            lessons: 8,
+            level: 'Avançado',
+            category: 'Instalação',
+            thumbnail: 'https://images.unsplash.com/photo-1603386329225-868f9b1ee6c9?auto=format&fit=crop&q=80&w=800',
+            reward: 400,
+            completed: false,
+            modules: [
+                { id: 'm1', title: 'Distribuição Térmica Controlada', duration: '25 min' },
+                { id: 'm2', title: 'Uso de Espátulas de Precisão Winf™', duration: '20 min' },
+                { id: 'm3', title: 'Prevenção de Efeito Lente', duration: '30 min' }
+            ]
         }
     ];
+
+    // Add modules to other courses to avoid errors
+    courses.forEach(c => {
+        if (!c.modules) {
+            c.modules = Array.from({ length: c.lessons }).map((_, i) => ({
+                id: `m${i}`,
+                title: `Módulo de Introdução ${i + 1}`,
+                duration: '10 min'
+            }));
+        }
+    });
 
     const filteredCourses = courses.filter(c => 
         c.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -83,8 +203,125 @@ const ModuleAcademy: React.FC = () => {
 
     const handleCompleteLesson = () => {
         gamify('ACADEMY_COMPLETED');
+        setActiveLesson(null);
         setShowCertificate(true);
     };
+
+    if (activeLesson) {
+        return (
+            <div className="fixed inset-0 z-[60] bg-winf-background flex flex-col animate-fade-in">
+                <div className="bg-winf-surface border-b border-winf-border p-4 flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => setActiveLesson(null)} className="p-2 hover:bg-winf-background rounded-full text-winf-text_muted transition-all">
+                            <ChevronRight className="rotate-180" size={20} />
+                        </button>
+                        <div>
+                            <p className="text-[10px] text-winf-primary font-black uppercase tracking-widest">Aula em curso</p>
+                            <h2 className="text-sm font-bold text-winf-text_primary">{selectedCourse.title}</h2>
+                        </div>
+                    </div>
+                    <button onClick={handleCompleteLesson} className="bg-winf-primary text-winf-background px-6 py-2 rounded-xl text-xs font-bold hover:bg-winf-primary_hover transition-all">
+                        Finalizar Treinamento
+                    </button>
+                </div>
+
+                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+                    {/* Content Area */}
+                    <div className="flex-[2] overflow-y-auto p-6 lg:p-12 custom-scrollbar">
+                        <div className="max-w-4xl mx-auto space-y-12">
+                            <div className="aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl relative group border border-winf-border">
+                                <img src={selectedCourse.thumbnail} className="w-full h-full object-cover opacity-60" alt="Lesson" />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="text-center space-y-4">
+                                        <div className="w-20 h-20 bg-winf-primary/20 backdrop-blur-md rounded-full flex items-center justify-center text-winf-primary border border-winf-primary/30 animate-pulse">
+                                            <PlayCircle size={40} />
+                                        </div>
+                                        <p className="text-winf-text_primary font-bold text-sm tracking-widest uppercase">Conteúdo Neural Disponível</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="prose prose-invert max-w-none">
+                                <h1 className="text-3xl font-bold text-winf-text_primary">{selectedCourse.title}</h1>
+                                <p className="text-winf-text_secondary leading-relaxed">
+                                    Nesta aula, vamos mergulhar no segredo do atendimento Winf™ de alta performance. 
+                                    O fluxo que você verá em seguida foi desenhado para converter curiosos em clientes fiéis através da autoridade e empatia.
+                                </p>
+
+                                {selectedCourse.id === 'c5' && (
+                                    <div className="space-y-8 mt-12 bg-winf-surface p-8 rounded-3xl border border-winf-border">
+                                        <h3 className="text-winf-primary font-bold uppercase tracking-widest flex items-center gap-2">
+                                            <Zap size={18} /> Protocolos Atendimento Tiago™
+                                        </h3>
+                                        
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6">
+                                            <div className="space-y-4">
+                                                <p className="text-winf-text_primary font-bold text-sm">1. Abertura Premium</p>
+                                                <div className="bg-winf-background p-4 rounded-2xl italic text-xs text-winf-text_muted border-l-2 border-winf-primary">
+                                                    "Muito bom dia ☀️ Que o nosso dia seja abençoado 🙏 Meu nome é Tiago e eu vou cuidar do seu atendimento..."
+                                                </div>
+                                                <p className="text-[11px] text-winf-text_secondary italic">Dica: O "Eu vou cuidar" transmite segurança imediata.</p>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <p className="text-winf-text_primary font-bold text-sm">2. Diagnóstico de Precisão</p>
+                                                <div className="bg-winf-background p-4 rounded-2xl italic text-xs text-winf-text_muted border-l-2 border-winf-primary">
+                                                    "Pra te orientar com precisão 👍 Você já tem as medidas ou prefere me enviar uma foto/vídeo?"
+                                                </div>
+                                                <p className="text-[11px] text-winf-text_secondary italic">Dica: A palavra PRECISÃO eleva seu nível de autoridade.</p>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <p className="text-winf-text_primary font-bold text-sm">3. Recomendação Direta</p>
+                                                <div className="bg-winf-background p-4 rounded-2xl italic text-xs text-winf-text_muted border-l-2 border-winf-primary">
+                                                    "Pelo seu caso, o ideal é essa solução aqui 👇 Porque ela resolve exatamente isso..."
+                                                </div>
+                                                <p className="text-[11px] text-winf-text_secondary italic">Dica: Não dê 10 opções. Seja o líder que simplifica a escolha.</p>
+                                            </div>
+
+                                            <div className="space-y-4">
+                                                <p className="text-winf-text_primary font-bold text-sm">4. O Fechamento</p>
+                                                <div className="bg-winf-background p-4 rounded-2xl italic text-xs text-winf-text_muted border-l-2 border-winf-primary">
+                                                    "Vou te montar um orçamento bem alinhado ao seu projeto 👍 Se fizer sentido, já organizamos a aplicação."
+                                                </div>
+                                                <p className="text-[11px] text-winf-text_secondary italic">Dica: "Se fizer sentido" remove a pressão e facilita o SIM.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Sidebar Player */}
+                    <div className="flex-1 bg-winf-surface border-l border-winf-border p-6 space-y-6 overflow-y-auto custom-scrollbar">
+                        <div className="space-y-2">
+                            <h4 className="text-winf-text_primary font-bold">Resumo do Curso</h4>
+                            <div className="flex items-center justify-between text-[11px] text-winf-text_muted">
+                                <span>{selectedCourse.modules.length} Módulos</span>
+                                <span>{selectedCourse.duration} totais</span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            {selectedCourse.modules.map((mod: any, i: number) => (
+                                <div key={mod.id} className="flex items-center gap-4 p-4 bg-winf-background/50 rounded-2xl border border-transparent hover:border-winf-primary/20 transition-all cursor-pointer group">
+                                    <div className="w-8 h-8 rounded-full bg-winf-surface border border-winf-border flex items-center justify-center text-[10px] font-bold text-winf-text_muted group-hover:text-winf-primary transition-colors">
+                                        {i + 1}
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-xs font-bold text-winf-text_secondary group-hover:text-winf-primary transition-colors">{mod.title}</p>
+                                        <p className="text-[10px] text-winf-text_muted">{mod.duration}</p>
+                                    </div>
+                                    {i === 0 ? <PlayCircle className="text-winf-primary" size={16} /> : <Lock size={12} className="text-winf-text_muted" />}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6 max-w-7xl mx-auto space-y-8 animate-fade-in pb-24">
@@ -149,6 +386,26 @@ const ModuleAcademy: React.FC = () => {
                     </div>
                 </div>
             )}
+
+            {/* Evolution Banner */}
+            <div className="bg-gradient-to-r from-winf-primary/20 to-transparent border border-winf-primary/30 rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-winf-primary/5 blur-3xl -mr-20 -mt-20 group-hover:scale-110 transition-transform duration-700"></div>
+                <div className="relative z-10 space-y-4 max-w-2xl text-center md:text-left">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 bg-winf-primary/20 rounded-full text-[9px] font-black text-winf-primary uppercase tracking-widest">
+                        <TrendingUp size={12} /> Trajetória de Sucesso
+                    </div>
+                    <h3 className="text-2xl font-bold text-white uppercase tracking-tighter">PRONTO PARA EVOLUIR SUA LICENÇA?</h3>
+                    <p className="text-winf-text_secondary text-xs leading-relaxed max-w-lg">
+                        Conhecimento é a base, mas ferramentas são o acelerador. Veja como os planos <span className="text-white font-bold">Elite, Advanced e Enterprise</span> podem transformar seu faturamento mensal na Blackshop.
+                    </p>
+                </div>
+                <button 
+                  onClick={() => onNavigate?.(ViewState.MODULE_BLACKSHOP)}
+                  className="relative z-10 bg-winf-primary text-black px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-winf-primary_hover transition-all flex items-center gap-2"
+                >
+                    Explorar Upgrades <ArrowRight size={16} />
+                </button>
+            </div>
 
             {/* Course Grid */}
             <div className="space-y-6">
@@ -264,14 +521,17 @@ const ModuleAcademy: React.FC = () => {
 
                                     <div className="space-y-3">
                                         <p className="text-xs font-bold text-winf-text_primary">Conteúdo do Curso</p>
-                                        <div className="space-y-2">
-                                            {[1, 2, 3, 4].map(i => (
-                                                <div key={i} className="flex items-center justify-between p-3 bg-winf-background/50 rounded-xl text-xs text-winf-text_secondary">
+                                        <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                                            {selectedCourse.modules.map((mod: any, i: number) => (
+                                                <div key={mod.id} className="flex items-center justify-between p-3 bg-winf-background/50 rounded-xl text-xs text-winf-text_secondary border border-transparent hover:border-winf-primary/30 transition-all cursor-pointer group">
                                                     <span className="flex items-center gap-3">
-                                                        <span className="text-winf-text_muted">0{i}</span>
-                                                        Módulo de Introdução {i}
+                                                        <span className="text-winf-text_muted font-mono">{i + 1 < 10 ? `0${i + 1}` : i + 1}</span>
+                                                        <span className="group-hover:text-winf-primary transition-colors">{mod.title}</span>
                                                     </span>
-                                                    <Lock size={12} className="text-winf-text_muted" />
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-[10px] text-winf-text_muted">{mod.duration}</span>
+                                                        <Lock size={12} className="text-winf-text_muted" />
+                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
@@ -285,7 +545,7 @@ const ModuleAcademy: React.FC = () => {
                                             Fechar
                                         </button>
                                         <button 
-                                            onClick={handleCompleteLesson}
+                                            onClick={() => setActiveLesson(selectedCourse.modules[0])}
                                             className="flex-1 py-3 bg-winf-primary hover:bg-winf-primary_hover text-winf-background font-bold rounded-xl transition-all shadow-lg shadow-winf-primary/5"
                                         >
                                             Iniciar Aula

@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 const ModuleInstallations: React.FC = () => {
-  const { installations, products, user, registerInstallation, installationJobs, updateInstallationJob, completeJobAndGenerateWarranty } = useWinf();
+  const { installations, products, user, registerInstallation, installationJobs, updateInstallationJob, completeJobAndGenerateWarranty, quotes, addInstallationJob } = useWinf();
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
@@ -35,6 +35,45 @@ const ModuleInstallations: React.FC = () => {
   const [paymentMethod, setPaymentMethod] = useState<'Pix' | 'Cartão' | 'Dinheiro'>('Pix');
   const [showNotifications, setShowNotifications] = useState(false);
   const [notificationConfig, setNotificationConfig] = useState({ enabled: true, leadTime: 24 });
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showManualOSModal, setShowManualOSModal] = useState(false);
+  const [scheduleData, setScheduleData] = useState({ quoteId: '', scheduledDate: '' });
+  const [manualOSData, setManualOSData] = useState({
+    customerName: '',
+    customerWhatsApp: '',
+    chosenFilm: '',
+    vehicleModel: '',
+    totalAmount: '',
+    scheduledDate: ''
+  });
+
+  const handleManualOSSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualOSData.customerName || !manualOSData.chosenFilm || !manualOSData.scheduledDate) {
+      alert("Preencha os campos obrigatórios (Cliente, Película, Data).");
+      return;
+    }
+    setLoading(true);
+    const jobData = {
+      service_order_id: `OS-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+      customer_name: manualOSData.customerName,
+      customer_whatsapp: manualOSData.customerWhatsApp || '',
+      customer_address: '',
+      customer_city: '',
+      chosen_film: manualOSData.chosenFilm,
+      vehicle_model: manualOSData.vehicleModel || 'Manual',
+      total_amount: parseFloat(manualOSData.totalAmount) || 0,
+      scheduled_date: manualOSData.scheduledDate,
+      collaborator_id: user?.id,
+    };
+    await addInstallationJob(jobData);
+    setShowManualOSModal(false);
+    setManualOSData({
+      customerName: '', customerWhatsApp: '', chosenFilm: '', vehicleModel: '', totalAmount: '', scheduledDate: ''
+    });
+    alert("OS Manual criada com sucesso!");
+    setLoading(false);
+  };
 
   const daysOfWeek = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
 
@@ -57,14 +96,17 @@ const ModuleInstallations: React.FC = () => {
     job.service_order_id?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const [vehiclePlate, setVehiclePlate] = useState('');
+
   const handleCompleteJob = async (jobId: string) => {
     setLoading(true);
-    const result = await completeJobAndGenerateWarranty(jobId);
+    const result = await completeJobAndGenerateWarranty(jobId, { vehiclePlate });
     if (result.success) {
       // Update payment method
       await updateInstallationJob(jobId, { payment_method: paymentMethod });
       setSelectedJob(null);
-      alert("Serviço concluído! Garantia gerada e recibo disponível.");
+      alert("Garantia Registrada! Serviço concluído e recibo disponível.");
+      setVehiclePlate('');
     } else {
       alert(result.error);
     }
@@ -75,6 +117,37 @@ const ModuleInstallations: React.FC = () => {
     const text = `*RECIBO WINF™*\n\nOlá ${job.customer_name},\nSeu serviço foi concluído com sucesso!\n\n*OS:* ${job.service_order_id}\n*Produto:* ${job.chosen_film}\n*Valor:* R$ ${job.total_amount?.toLocaleString('pt-BR')}\n*Pagamento:* ${job.payment_method || 'Confirmado'}\n\n*Garantia:* ${job.warranty_id}\n\nObrigado por escolher Winf!`;
     const url = `https://wa.me/${job.customer_whatsapp?.replace(/\D/g, '')}?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
+  };
+
+  const handleScheduleService = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!scheduleData.quoteId || !scheduleData.scheduledDate) {
+      alert("Selecione um orçamento e a data.");
+      return;
+    }
+    setLoading(true);
+    const selectedQuote = quotes.find(q => q.id === scheduleData.quoteId);
+    if (selectedQuote) {
+      const jobData = {
+        service_order_id: `OS-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
+        customer_name: selectedQuote.customerName,
+        customer_whatsapp: selectedQuote.customerWhatsApp || '',
+        customer_address: selectedQuote.customerAddress || '',
+        customer_city: selectedQuote.customerCity || '',
+        chosen_film: selectedQuote.items.map(i => i.description).join(', '),
+        vehicle_model: selectedQuote.vehicleModel || selectedQuote.projectType || 'Residencial',
+        total_amount: selectedQuote.totalAmount,
+        scheduled_date: scheduleData.scheduledDate,
+        collaborator_id: user?.id,
+      };
+      await addInstallationJob(jobData);
+      setShowScheduleModal(false);
+      setScheduleData({ quoteId: '', scheduledDate: '' });
+      alert("Serviço agendado com sucesso!");
+    } else {
+      alert("Orçamento não encontrado.");
+    }
+    setLoading(false);
   };
 
   return (
@@ -194,19 +267,33 @@ const ModuleInstallations: React.FC = () => {
               <h2 className="text-xl font-bold text-white uppercase tracking-tight flex items-center gap-2">
                 <Clock className="w-5 h-5 text-zinc-500" /> Fluxo de Trabalho
               </h2>
-              <div className="flex bg-zinc-900/50 p-1 rounded-lg border border-white/5">
+              <div className="flex items-center gap-2">
                 <button 
-                  onClick={() => setViewMode('weekly')}
-                  className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'weekly' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
+                  onClick={() => setShowManualOSModal(true)}
+                  className="bg-zinc-800 text-white border border-white/10 px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest hover:border-winf-primary hover:text-winf-primary transition-all flex items-center gap-2"
                 >
-                  Semanal
+                  <Plus size={14} /> Nova OS (Avulso)
                 </button>
                 <button 
-                  onClick={() => setViewMode('list')}
-                  className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'list' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
+                  onClick={() => setShowScheduleModal(true)}
+                  className="bg-winf-primary text-black px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-winf-primary/90 transition-all flex items-center gap-2"
                 >
-                  Lista
+                  <FileText size={14} /> Vincular Orçamento
                 </button>
+                <div className="flex bg-zinc-900/50 p-1 rounded-lg border border-white/5">
+                  <button 
+                    onClick={() => setViewMode('weekly')}
+                    className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'weekly' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
+                  >
+                    Semanal
+                  </button>
+                  <button 
+                    onClick={() => setViewMode('list')}
+                    className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${viewMode === 'list' ? 'bg-white text-black' : 'text-zinc-500 hover:text-white'}`}
+                  >
+                    Lista
+                  </button>
+                </div>
               </div>
             </div>
             <div className="relative w-full md:w-72">
@@ -263,8 +350,20 @@ const ModuleInstallations: React.FC = () => {
                 </motion.div>
               ))}
               {filteredJobs.filter(j => j.status !== 'completed').length === 0 && (
-                <div className="col-span-full py-20 text-center border border-dashed border-white/10 rounded-3xl">
-                  <p className="text-zinc-500 font-mono text-sm uppercase tracking-widest">Nenhuma OS pendente na agenda.</p>
+                <div className="col-span-full py-24 text-center border border-dashed border-white/5 bg-white/[0.02] rounded-3xl flex flex-col items-center justify-center space-y-4">
+                  <div className="w-16 h-16 rounded-full bg-zinc-900 border border-white/5 flex items-center justify-center">
+                    <ShieldCheck className="w-8 h-8 text-zinc-700" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-white font-bold text-sm uppercase tracking-widest">Agenda Disponível</p>
+                    <p className="text-zinc-500 text-xs max-w-xs mx-auto">Nenhuma ordem de serviço pendente para os critérios selecionados.</p>
+                  </div>
+                  <button 
+                    onClick={() => setShowManualOSModal(true)}
+                    className="text-winf-primary text-[10px] font-black uppercase tracking-widest hover:underline mt-2"
+                  >
+                    + Criar OS Manual
+                  </button>
                 </div>
               )}
             </div>
@@ -365,7 +464,213 @@ const ModuleInstallations: React.FC = () => {
         </div>
       )}
 
+      {/* Manual OS Modal */}
+      <AnimatePresence>
+        {showManualOSModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setShowManualOSModal(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative bg-[#0A0A0A] border border-white/10 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl p-8 max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h3 className="text-white font-bold text-lg uppercase tracking-widest">Nova OS (Serviço Avulso)</h3>
+                  <p className="text-gray-500 text-[10px] uppercase tracking-widest mt-1">Lançamento direto sem orçamento</p>
+                </div>
+                <button onClick={() => setShowManualOSModal(false)} className="text-gray-500 hover:text-white transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleManualOSSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-5">
+                  <div className="space-y-2 col-span-2">
+                    <label className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest flex items-center gap-2">
+                      <User size={10} className="text-winf-primary" /> 1. Nome do Cliente
+                    </label>
+                    <input
+                      type="text"
+                      value={manualOSData.customerName}
+                      onChange={(e) => setManualOSData({ ...manualOSData, customerName: e.target.value })}
+                      placeholder="Identificação do cliente"
+                      className="w-full bg-black/60 border border-white/5 rounded-xl px-4 py-4 text-xs text-white focus:outline-none focus:border-winf-primary/50 transition-all focus:ring-1 focus:ring-winf-primary/20"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <label className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest flex items-center gap-2">
+                      <ShieldCheck size={10} className="text-winf-primary" /> 2. Material Escolhido
+                    </label>
+                    <input
+                      type="text"
+                      value={manualOSData.chosenFilm}
+                      onChange={(e) => setManualOSData({ ...manualOSData, chosenFilm: e.target.value })}
+                      placeholder="Ex: AeroCore Full, Winf Select Plus"
+                      className="w-full bg-black/60 border border-white/5 rounded-xl px-4 py-4 text-xs text-white focus:outline-none focus:border-winf-primary/50 transition-all focus:ring-1 focus:ring-winf-primary/20"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest flex items-center gap-2">
+                      <MapPin size={10} className="text-winf-primary" /> Veículo / Local
+                    </label>
+                    <input
+                      type="text"
+                      value={manualOSData.vehicleModel}
+                      onChange={(e) => setManualOSData({ ...manualOSData, vehicleModel: e.target.value })}
+                      placeholder="Audi Q5 / Varanda"
+                      className="w-full bg-black/60 border border-white/5 rounded-xl px-4 py-4 text-xs text-white focus:outline-none focus:border-winf-primary/50 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest flex items-center gap-2">
+                      <DollarSign size={10} className="text-winf-primary" /> Investimento (R$)
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={manualOSData.totalAmount}
+                      onChange={(e) => setManualOSData({ ...manualOSData, totalAmount: e.target.value })}
+                      placeholder="0.00"
+                      className="w-full bg-black/60 border border-white/5 rounded-xl px-4 py-4 text-xs text-white focus:outline-none focus:border-winf-primary/50 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2 col-span-2">
+                    <label className="text-[10px] text-zinc-500 uppercase font-bold tracking-widest flex items-center gap-2">
+                      <Calendar size={10} className="text-winf-primary" /> 3. Data de Ativação
+                    </label>
+                    <input
+                      type="date"
+                      value={manualOSData.scheduledDate}
+                      onChange={(e) => setManualOSData({ ...manualOSData, scheduledDate: e.target.value })}
+                      className="w-full bg-black/60 border border-white/5 rounded-xl px-4 py-4 text-xs text-white focus:outline-none focus:border-winf-primary/50 transition-all [color-scheme:dark]"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <button 
+                    type="submit" 
+                    disabled={loading}
+                    className="w-full py-4 bg-winf-primary text-black font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:bg-white transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {loading ? 'Processando...' : <><Plus size={16} /> Salvar OS</>}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* Detail Modal */}
+      <AnimatePresence>
+        {showScheduleModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }} 
+              onClick={() => setShowScheduleModal(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative bg-[#0A0A0A] border border-white/10 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl p-8"
+            >
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h3 className="text-white font-bold text-lg uppercase tracking-widest">Agendar Serviço</h3>
+                  <p className="text-gray-500 text-[10px] uppercase tracking-widest mt-1">Vincular orçamento e data</p>
+                </div>
+                <button onClick={() => setShowScheduleModal(false)} className="text-gray-500 hover:text-white transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleScheduleService} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Selecione o Orçamento (PDF)</label>
+                  <select
+                    value={scheduleData.quoteId}
+                    onChange={(e) => setScheduleData({ ...scheduleData, quoteId: e.target.value })}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-winf-primary transition-colors appearance-none"
+                    required
+                  >
+                    <option value="" disabled>Escolha um orçamento aprovado...</option>
+                    {quotes.map(q => (
+                      <option key={q.id} value={q.id}>{q.customerName} - R$ {q.totalAmount?.toLocaleString('pt-BR')} ({new Date(q.createdAt).toLocaleDateString()})</option>
+                    ))}
+                    {quotes.length === 0 && <option value="" disabled>Nenhum orçamento encontrado.</option>}
+                  </select>
+                  {scheduleData.quoteId && (
+                    <div className="p-3 bg-white/5 border border-white/5 rounded-lg mt-2">
+                      <p className="text-[9px] text-gray-400 uppercase">Preenchimento Automático ativado</p>
+                      <p className="text-xs text-green-400 flex items-center gap-1 mt-1"><CheckCircle2 size={12}/> Dados do cliente, produto e valores vinculados.</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] text-zinc-500 uppercase font-black tracking-widest">Selecione a Data</label>
+                  <input
+                    type="date"
+                    value={scheduleData.scheduledDate}
+                    onChange={(e) => setScheduleData({ ...scheduleData, scheduledDate: e.target.value })}
+                    className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-winf-primary transition-colors [color-scheme:dark]"
+                    required
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <button 
+                      type="button"
+                      onClick={() => {
+                         const tomorrow = new Date();
+                         tomorrow.setDate(tomorrow.getDate() + 1);
+                         setScheduleData({...scheduleData, scheduledDate: tomorrow.toISOString().split('T')[0]});
+                      }}
+                      className="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-xs text-zinc-400 rounded-lg transition-colors uppercase font-bold tracking-widest text-[9px]"
+                    >
+                      Amanhã
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                         const nextWeek = new Date();
+                         nextWeek.setDate(nextWeek.getDate() + 7);
+                         setScheduleData({...scheduleData, scheduledDate: nextWeek.toISOString().split('T')[0]});
+                      }}
+                      className="flex-1 py-1.5 bg-white/5 hover:bg-white/10 text-xs text-zinc-400 rounded-lg transition-colors uppercase font-bold tracking-widest text-[9px]"
+                    >
+                      Próx. Semana
+                    </button>
+                  </div>
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={loading}
+                  className="w-full py-4 bg-winf-primary text-black font-black text-[10px] uppercase tracking-[0.2em] rounded-xl hover:bg-white transition-all disabled:opacity-50"
+                >
+                  {loading ? 'Processando...' : 'Confirmar Agendamento'}
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {selectedJob && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -421,26 +726,38 @@ const ModuleInstallations: React.FC = () => {
 
                 {selectedJob.status !== 'completed' && (
                   <div className="space-y-6 pt-6 border-t border-white/5">
-                    <div className="space-y-3">
-                      <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest text-center">Forma de Pagamento</p>
-                      <div className="grid grid-cols-3 gap-3">
-                        {['Pix', 'Cartão', 'Dinheiro'].map((m) => (
-                          <button 
-                            key={m}
-                            onClick={() => setPaymentMethod(m as any)}
-                            className={`py-3 rounded-xl text-xs font-bold transition-all border ${paymentMethod === m ? 'bg-white text-black border-white' : 'bg-black/40 text-zinc-500 border-white/10 hover:border-white/20'}`}
-                          >
-                            {m.toUpperCase()}
-                          </button>
-                        ))}
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-[10px] font-mono text-zinc-500 uppercase tracking-widest mb-2">Placa do Veículo / Identificação (Opcional)</label>
+                        <input
+                          type="text"
+                          value={vehiclePlate}
+                          onChange={(e) => setVehiclePlate(e.target.value)}
+                          placeholder="ABC-1234"
+                          className="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-winf-primary transition-colors"
+                        />
+                      </div>
+                      <div className="space-y-3">
+                        <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-widest text-center">Forma de Pagamento</p>
+                        <div className="grid grid-cols-3 gap-3">
+                          {['Pix', 'Cartão', 'Dinheiro'].map((m) => (
+                            <button 
+                              key={m}
+                              onClick={() => setPaymentMethod(m as any)}
+                              className={`py-3 rounded-xl text-xs font-bold transition-all border ${paymentMethod === m ? 'bg-white text-black border-white' : 'bg-black/40 text-zinc-500 border-white/10 hover:border-white/20'}`}
+                            >
+                              {m.toUpperCase()}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                     <button 
                       onClick={() => handleCompleteJob(selectedJob.id)}
                       disabled={loading}
-                      className="w-full bg-white text-black py-5 rounded-2xl font-black uppercase tracking-[0.2em] hover:bg-zinc-200 transition-all flex items-center justify-center gap-3"
+                      className="w-full bg-winf-primary text-black py-5 rounded-2xl font-black uppercase tracking-[0.2em] hover:bg-white transition-all flex items-center justify-center gap-3"
                     >
-                      {loading ? 'Processando...' : <><CheckCircle2 className="w-6 h-6" /> Concluir Serviço & Gerar Recibo</>}
+                      {loading ? 'Processando...' : <><CheckCircle2 className="w-6 h-6" /> Registrar Garantia e Concluir</>}
                     </button>
                   </div>
                 )}

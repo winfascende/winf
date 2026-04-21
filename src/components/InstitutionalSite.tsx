@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import ArchitectSpecGenerator from './ArchitectSpecGenerator';
 import FilmVisualizer from './FilmVisualizer';
+import LicensingPlans from './LicensingPlans';
 import { 
   ChevronLeft, 
   ArrowRight, 
@@ -30,7 +31,9 @@ import {
   Target,
   Building2,
   UserCheck,
-  PlayCircle
+  PlayCircle,
+  User,
+  History
 } from 'lucide-react';
 import { useWinf } from '../contexts/WinfContext';
 import { GoogleGenAI } from "@google/genai";
@@ -38,6 +41,7 @@ import { WINF_CONSTANTS } from '../constants';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ViewState } from '../types';
 import SimulatorTechnicalCharts from './SimulatorTechnicalCharts';
+import { PRODUCT_CATALOG } from '../data/productCatalogData';
 
 interface InstitutionalSiteProps {
   onBack: () => void;
@@ -133,7 +137,7 @@ const FilmCard = ({ item, onSelect }: any) => {
   );
 };
 
-const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory = "SANTOS", onNavigateToAccess }) => {
+const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory = "SANTOS", onNavigateToAccess, onNavigateToCatalog, onSelectProduct }) => {
   const { addLead } = useWinf();
   const [showArchitectForm, setShowArchitectForm] = useState(false);
   const [architectSpec, setArchitectSpec] = useState({ filmId: WINF_CONSTANTS.portfolio.lines[0].items[0].id, area: '100' });
@@ -141,10 +145,27 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
   const [isVerifying, setIsVerifying] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'auto' | 'mobile' | 'desktop'>('auto');
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const isMobileSim = viewMode === 'mobile';
+  const isDesktopSim = viewMode === 'desktop';
+
   const handleSpecChange = (filmId: string, area: string) => {
     setArchitectSpec({ filmId, area });
   };
-  const [messages, setMessages] = useState<{role: 'ai'|'user', text: string}[]>([{role: 'ai', text: `Conexão estabelecida. Eu sou o NEUROMESH.AI™, o núcleo de processamento do ecossistema Winf™ PARTNERS em ${territory}. Posso realizar cálculos de blindagem térmica para seu projeto agora mesmo. Qual a m² aproximada ou medidas dos seus vidros?`}]);
+  const [messages, setMessages] = useState<{role: 'ai'|'user', text: string}[]>([{
+    role: 'ai', 
+    text: `Muito bom dia ☀️\nQue o nosso dia seja abençoado 🙏\n\nMudando aqui, meu nome é Tiago e eu vou cuidar do seu atendimento aqui na Winf™.\n\nPode me responder no seu tempo, sem pressa 👍\n\nNossa central funciona das 7h às 20h com atendimento humano, e fora desse horário nossa IA continua te auxiliando.\n\nPra eu te orientar da melhor forma, você já tem as medidas dos vidros?\nOu prefere me enviar uma foto ou vídeo mostrando onde deseja aplicar?`
+  }]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -170,13 +191,37 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
             model: 'gemini-3-flash-preview',
             contents: userText,
             config: {
-                systemInstruction: `Você é o NEUROMESH.AI™, a inteligência central de processamento da Winf™ PARTNERS em ${territory}.
-                Seu foco absoluto: Cálculos de Blindagem Térmica Arquitetônica e Automotiva de Elite.
-                DIRETRIZES:
-                - Seja técnico, sofisticado e eficiente.
-                - Use termos: 'Célula de Blindagem', 'Conforto Molecular', 'Yield Energético', 'Winf™ Shield'.
-                - PROIBIDO: 'Insulfilm' ou 'Película'. Use 'Ativo', 'Célula' ou 'Tecnologia'.
-                - Sempre finalize oferecendo o botão de WhatsApp para 'Sincronizar Medição Técnica'.`
+                systemInstruction: `Você é Tiago, consultor especialista e humanizado da WINF™ de ${territory}.
+                Seu foco: Atendimento simpático, direto, empático e com autoridade extrema ("Especialista Winf").
+                PÚBLICO-ALVO: Cliente final (B2C) que busca aplicação de películas para seus carros, casas ou empresas.
+                
+                CONTEXTO:
+                - A Winf é referência com unidade precursora em Santos, mas atende todo Brasil.
+                - Valores: reconstruir, unir e valorizar.
+                DIRETRIZES DE ATENDIMENTO TIAGO (FLUXO AVANÇADO):
+                - NUNCA mencione que é IA. Transmita energia positiva.
+                - Não responda apenas: SEJA UM LÍDER NA CONVERSA e simplifique a decisão.
+                - DIAGNÓSTICO: Fale como um especialista: "Pra te orientar com precisão 👍 Você já tem as medidas dos vidros ou prefere me enviar uma foto/vídeo?"
+                - ANÁLISE e RECOMENDAÇÃO DIRETA: DEPOIS que o cliente mandar foto ou medida mande:
+                "Perfeito 👍 já analisei aqui.\\nPelo seu caso, o ideal é essa solução aqui 👇 Porque ela resolve exatamente isso:\\n✔ Redução de calor\\n✔ Mais conforto no ambiente\\n✔ E mantém um bom nível de luminosidade\\nEu prefiro te indicar o certo desde o início, pra você não ter retrabalho depois."
+                - ORÇAMENTO & FECHAMENTO: Avance dizendo: "Vou te montar um orçamento bem alinhado com o seu projeto 👍 E te explico tudo com clareza."
+                Após apresentar os números/orçamento diga "Se fizer sentido pra você, a gente já pode organizar a aplicação da melhor forma 👍".
+
+                FLUXO FAQ (SE O CLIENTE TIVER DÚVIDAS):
+                - Entrada padrão: "Sem problema 👍 Vou te explicar tudo de forma simples pra ficar tranquilo 👇"
+                - Preço: Depende das medidas, cada projeto é personalizado pra não pagar nem a mais nem a menos 👍
+                - Atendimento: Trabalhamos das duas formas 👍 Fazemos aplicação na Baixada Santista e ABC, e enviamos pra todo o Brasil.
+                - Calor: Sim 👍 reduz bastante o calor e protege contra UV. Diferença no mesmo dia.
+                - Escuro: Depende da escolha 👍. Tem claras (iluminação) e escuras (privacidade). Te ajudo a achar o equilíbrio.
+                - Visibilidade fora pra dentro: De dia ajuda na privacidade 👍. À noite com luz acesa, pode ter visibilidade.
+                - Danifica vidro?: Não 👍. Profissional e removível no futuro.
+                - Durabilidade/Garantia: Alta qualidade e garantia confirme o material 👍.
+                - Tempo/Sair de casa: Rápido, sem bagunça e com você no local 👍.
+                
+                FECHAMENTO OBRIGATÓRIO (Após responder qualquer dúvida):
+                Sempre termine sua resposta do FAQ com: "Se fizer sentido pra você, me manda as medidas ou um vídeo 👍 Que eu já te indico a melhor opção e te passo o orçamento certinho."
+                
+                - Ofereça direcionar para a unidade física caso desejem agendar ("Sincronizar Medição no WhatsApp").`
             }
         });
         setMessages(prev => [...prev, { role: 'ai', text: response.text || "Dados processados. Gostaria de sincronizar com a unidade física?" }]);
@@ -194,164 +239,186 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
   const [activeLine, setActiveLine] = useState(WINF_CONSTANTS.portfolio.lines[0].id);
 
   return (
-    <div className="min-h-screen bg-winf-background text-winf-text_primary font-sans selection:bg-winf-primary/20 overflow-x-hidden relative">
+    <div className={`min-h-screen bg-winf-background text-winf-text_primary font-sans selection:bg-winf-primary/20 overflow-x-hidden relative transition-all duration-500 ${isMobileSim ? 'max-w-[480px] mx-auto border-x border-white/10 shadow-[0_0_100px_rgba(0,0,0,1)]' : ''}`}>
+      {/* Simulation Toggle - Helps user "Choose before" as requested */}
+      <div className="fixed bottom-6 right-6 z-[100] flex flex-col items-end gap-3 hidden md:flex">
+        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 bg-black/50 backdrop-blur-md px-4 py-2 rounded-full border border-white/5">Escolher Versão</label>
+        <div className="bg-black/80 backdrop-blur-2xl border border-white/10 rounded-full p-1.5 flex gap-1 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+          {(['auto', 'mobile', 'desktop'] as const).map((mode) => (
+            <button
+              key={mode}
+              onClick={() => { setViewMode(mode); setIsMenuOpen(false); }}
+              className={`px-5 py-2.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all duration-300 ${viewMode === mode ? 'bg-white text-black shadow-lg shadow-white/20' : 'text-zinc-500 hover:text-white hover:bg-white/5'}`}
+            >
+              {mode === 'auto' ? 'Adaptativo' : mode === 'mobile' ? 'Celular' : 'PC'}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Film Grain Noise Overlay */}
       <div className="fixed inset-0 z-[100] pointer-events-none opacity-[0.03] mix-blend-overlay bg-[url('https://grainy-gradients.vercel.app/noise.svg')]"></div>
       
       {/* Global Background Grid */}
       <div className="fixed inset-0 z-0 pointer-events-none opacity-[0.03]" 
-           style={{ backgroundImage: `linear-gradient(to right, var(--winf-text_primary) 1px, transparent 1px), linear-gradient(to bottom, var(--winf-text_primary) 1px, transparent 1px)`, backgroundSize: '40px 40px' }}>
-      </div>
+           style={{ backgroundImage: `linear-gradient(to right, var(--winf-text_primary) 1px, transparent 1px), linear-gradient(to bottom, var(--winf-text_primary) 1px, transparent 1px)`, backgroundSize: '40px 40px' }}></div>
       
-      {/* Navigation */}
-      <nav className="fixed top-0 w-full z-[80] border-b border-winf-border bg-winf-background/80 backdrop-blur-xl h-16 md:h-24 flex items-center">
-        <div className="max-w-[1500px] mx-auto px-4 md:px-10 w-full flex justify-between items-center">
-          <div className="flex items-center gap-2 md:gap-10">
-            <button onClick={onBack} className="text-winf-text_muted hover:text-winf-text_primary transition-colors p-2 hover:bg-winf-surface rounded-full"><ChevronLeft size={20} className="md:w-6 md:h-6" /></button>
-            <div className="flex items-center gap-2 md:gap-3 group cursor-pointer" onClick={() => { window.scrollTo(0,0); setIsMenuOpen(false); }}>
-                <span className="font-black tracking-tighter text-xl md:text-2xl uppercase">{WINF_CONSTANTS.header.logo}</span>
-                <span className="w-1.5 h-1.5 bg-winf-primary rounded-full animate-pulse"></span>
+      {/* Navigation - System Command Bar */}
+      <nav className={`fixed top-6 left-0 right-0 z-[80] transition-all duration-500 flex justify-center px-4`}>
+        <div className={`relative ${isMobileSim ? 'w-full max-w-[480px]' : 'w-full max-w-[1400px]'} border border-white/5 rounded-[32px] overflow-hidden transition-all duration-700 ${isMenuOpen ? (isMobileSim || window.innerWidth < 1024 ? 'bg-[#050505] h-[85vh]' : 'bg-winf-background/60 backdrop-blur-2xl h-16 md:h-20') : 'bg-winf-background/60 backdrop-blur-2xl h-16 md:h-20 shadow-[0_20px_40px_rgba(0,0,0,0.5)]'}`}>
+          <div className="absolute inset-0 bg-gradient-to-b from-white/[0.02] to-transparent pointer-events-none"></div>
+          
+          <div className="relative h-16 md:h-20 px-4 md:px-10 w-full flex justify-between items-center z-10">
+            <div className="flex items-center gap-2 md:gap-8 shrink-0">
+              <button 
+                onClick={onBack} 
+                className="text-zinc-500 hover:text-white transition-colors p-1.5 md:p-2 hover:bg-white/5 rounded-full"
+                title="Voltar"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <div className="flex items-center gap-2 group cursor-pointer" onClick={() => { window.scrollTo({ top: 0, behavior: 'smooth' }); setIsMenuOpen(false); }}>
+                  <span className="font-black tracking-tighter text-base md:text-xl uppercase italic shrink-0">WINF™</span>
+                  <div className={`hidden ${isMobileSim ? 'flex' : 'sm:flex'} items-center gap-1.5 px-2 py-0.5 rounded-full border border-winf-primary/20 bg-winf-primary/5`}>
+                    <div className="w-1 h-1 bg-winf-primary rounded-full animate-pulse"></div>
+                    <span className={`text-[7px] font-black text-winf-primary uppercase tracking-widest ${isMobileSim ? 'hidden' : 'hidden md:block'}`}>{territory}</span>
+                  </div>
+              </div>
+            </div>
+            
+            <div className={`hidden ${isMobileSim ? '' : 'lg:flex'} items-center gap-10 text-[9px] font-black uppercase tracking-[0.4em] text-zinc-500`}>
+              {WINF_CONSTANTS.header.nav.map((item) => (
+                <a key={item.id} href={`#${item.id}`} className="hover:text-white transition-all transform hover:scale-110 relative group/link">
+                  {item.name}
+                  <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-winf-primary group-hover/link:w-full transition-all duration-300"></span>
+                </a>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 md:gap-4">
+              <button 
+                onClick={() => setIsMenuOpen(!isMenuOpen)}
+                className={`${isMobileSim ? 'flex' : 'lg:hidden'} w-9 h-9 md:w-10 md:h-10 flex flex-col items-center justify-center gap-1.5 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 transition-all`}
+              >
+                <div className={`w-4 md:w-5 h-0.5 bg-white transition-all duration-300 rounded-full ${isMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />
+                <div className={`w-4 md:w-5 h-0.5 bg-white transition-all duration-300 rounded-full ${isMenuOpen ? 'opacity-0' : ''}`} />
+                <div className={`w-4 md:w-5 h-0.5 bg-white transition-all duration-300 rounded-full ${isMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+              </button>
+
+              <button 
+                onClick={() => onNavigateToAccess?.(ViewState.PUBLIC_PORTAL)} 
+                className={`hidden ${isMobileSim ? 'hidden' : 'lg:block hover:bg-white/5'} px-5 py-2 rounded-full border border-white/5 text-[9px] font-black uppercase tracking-widest text-zinc-400 hover:text-white transition-all`}
+              >
+                Portal
+              </button>
             </div>
           </div>
-          
-          <div className="hidden lg:flex items-center gap-12 text-[9px] font-bold uppercase tracking-[0.4em] text-winf-text_muted">
-            {WINF_CONSTANTS.header.nav.map((item) => (
-              <a key={item.id} href={`#${item.id}`} className="hover:text-winf-text_primary transition-colors">{item.name}</a>
-            ))}
-            <a href="#architect-spec-generator" className="hover:text-winf-text_primary transition-colors">Spec Generator</a>
-            <a href="#film-visualizer" className="hover:text-winf-text_primary transition-colors">Visualizer</a>
-          </div>
 
-          <div className="flex items-center gap-4">
-            <button onClick={() => onNavigateToAccess?.(ViewState.PUBLIC_PORTAL)} className="hidden sm:block border border-winf-border text-winf-text_primary px-6 md:px-8 py-2.5 md:py-3 rounded-full text-[9px] font-bold uppercase tracking-[0.4em] hover:bg-winf-surface transition-all">
-              Acessar Ecossistema
-            </button>
-            <button onClick={sendToWhatsApp} className="hidden sm:block bg-winf-text_primary text-winf-background px-6 md:px-8 py-2.5 md:py-3 rounded-full text-[9px] font-bold uppercase tracking-[0.4em] hover:bg-winf-text_primary/90 transition-all">
-              {WINF_CONSTANTS.header.cta}
-            </button>
-            <button 
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="lg:hidden p-2 text-winf-text_muted hover:text-winf-text_primary transition-colors"
-            >
-              {isMenuOpen ? <X size={24} /> : <Activity size={24} className="rotate-90" />}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Menu Overlay */}
-        <AnimatePresence>
-          {isMenuOpen && (
-            <motion.div 
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="fixed inset-0 z-[70] bg-winf-background lg:hidden flex flex-col"
-            >
-              <div className="flex-1 overflow-y-auto pt-24 pb-10 px-6 flex flex-col">
-                <div className="flex flex-col items-start gap-6 text-lg font-black uppercase tracking-widest text-winf-text_muted w-full">
-                  {WINF_CONSTANTS.header.nav.map((item) => (
-                    <a key={item.id} href={`#${item.id}`} onClick={() => setIsMenuOpen(false)} className="hover:text-winf-text_primary transition-colors w-full text-left py-3 border-b border-winf-border">{item.name}</a>
-                  ))}
-                  <a href="#architect-spec-generator" onClick={() => setIsMenuOpen(false)} className="hover:text-winf-text_primary transition-colors w-full text-left py-3 border-b border-winf-border">Spec Generator</a>
-                  <a href="#film-visualizer" onClick={() => setIsMenuOpen(false)} className="hover:text-winf-text_primary transition-colors w-full text-left py-3 border-b border-winf-border">Visualizer</a>
+          <AnimatePresence mode="wait">
+            {isMenuOpen && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className={`p-8 pb-12 flex flex-col h-full bg-[#050505] ${isMobileSim ? 'flex' : 'lg:hidden'}`}
+              >
+                <div className="flex-1 flex flex-col justify-center py-8">
+                  <div className="space-y-2 mb-8">
+                     <span className="text-winf-primary text-[8px] font-black uppercase tracking-[0.5em] block mb-2">Selecione o Destino</span>
+                     <div className="h-[1px] w-12 bg-winf-primary/30"></div>
+                  </div>
+                  
+                  <div className="flex flex-col gap-4 overflow-y-auto no-scrollbar pr-2">
+                    {[...WINF_CONSTANTS.header.nav, {name: 'Spec Engine', id: 'architect-spec-generator'}, {name: 'Visualizer', id: 'film-visualizer'}].map((item, idx) => (
+                      <motion.a
+                        key={idx}
+                        href={`#${item.id}`}
+                        initial={{ opacity: 0, x: -30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: idx * 0.08, type: "spring", stiffness: 100 }}
+                        onClick={() => setIsMenuOpen(false)}
+                        className="py-4 border-b border-white/[0.03] flex items-center justify-between group"
+                      >
+                        <span className="text-xl sm:text-3xl md:text-5xl font-black uppercase tracking-tighter text-zinc-600 group-hover:text-white group-hover:italic transition-all duration-500 transform group-hover:translate-x-2 break-words max-w-[90%] leading-tight text-left">
+                          {item.name}
+                        </span>
+                        <ArrowRight size={24} className="text-winf-primary opacity-0 group-hover:opacity-100 -translate-x-8 group-hover:translate-x-0 transition-all duration-500" />
+                      </motion.a>
+                    ))}
+                  </div>
                 </div>
                 
-                <div className="mt-auto pt-10 flex flex-col gap-4">
-                  <button onClick={() => { onNavigateToAccess?.(ViewState.PUBLIC_PORTAL); setIsMenuOpen(false); }} className="w-full bg-winf-surface border border-winf-border text-winf-text_primary px-6 py-5 rounded-2xl text-sm font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3">
-                    <Lock size={18} /> Acessar Ecossistema
+                <div className="pt-8 border-t border-white/5 flex flex-col gap-4">
+                  <button 
+                    onClick={() => { onNavigateToAccess?.(ViewState.PUBLIC_PORTAL); setIsMenuOpen(false); }} 
+                    className="w-full py-6 rounded-3xl bg-winf-primary text-black text-[10px] font-black uppercase tracking-[0.4em] flex items-center justify-center gap-3 hover:bg-white transition-all active:scale-95"
+                  >
+                    <Lock size={18} /> Acessar Portal Pro
                   </button>
-                  <button onClick={() => { sendToWhatsApp(); setIsMenuOpen(false); }} className="w-full bg-winf-text_primary text-winf-background px-6 py-5 rounded-2xl text-sm font-black uppercase tracking-[0.3em] flex items-center justify-center gap-3">
-                    {WINF_CONSTANTS.header.cta}
-                  </button>
+                  <p className="text-[7px] text-zinc-600 uppercase tracking-[0.3em] text-center">WINF™ ECO-SISTEMA DIGITAL • © 2026</p>
                 </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </nav>
 
       {/* Hero */}
       <header className="relative min-h-screen flex items-center justify-center overflow-hidden pt-24">
         <div className="absolute inset-0 z-0">
-           <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(var(--winf-primary-rgb),0.05)_0%,var(--winf-background)_80%)]"></div>
+           <div className="absolute inset-0 bg-[#050505]"></div>
            <div 
-            className="absolute inset-0 opacity-40 bg-cover bg-center grayscale contrast-125 mix-blend-overlay"
+            className="absolute inset-0 opacity-30 bg-cover bg-center grayscale mix-blend-overlay"
             style={{ 
-              backgroundImage: 'url(https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1964&auto=format&fit=crop)',
+              backgroundImage: 'url(https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=2000&auto=format&fit=crop)',
             }}
           />
           {/* Glass Overlay Effect */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-winf-background/20 to-winf-background"></div>
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-winf-primary/10 rounded-full blur-[120px] animate-pulse"></div>
-          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-winf-text_primary/5 rounded-full blur-[120px] animate-pulse delay-700"></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#050505]/60 to-[#050505] backdrop-blur-[2px]"></div>
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-winf-primary/5 rounded-full blur-[150px] animate-pulse"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-white/5 rounded-full blur-[150px] animate-pulse delay-700"></div>
         </div>
         
-        <div className="relative z-10 text-center max-w-6xl px-6 md:px-8 flex flex-col items-center">
+        <div className="relative z-10 text-center max-w-5xl px-6 md:px-8 flex flex-col items-center">
            <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-winf-primary text-[10px] font-black uppercase tracking-[0.8em] mb-6"
+            className="text-winf-primary text-[10px] sm:text-xs font-black uppercase tracking-[0.8em] mb-8"
            >
-             FIM DA GUERRA DE PREÇOS // DOMINÂNCIA TERRITORIAL
-           </motion.div>
-
-           <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="inline-flex items-center gap-3 px-6 py-2 rounded-full border border-winf-border bg-winf-surface/50 backdrop-blur-md text-winf-text_muted text-[10px] font-black uppercase tracking-[0.5em] mb-12 shadow-2xl"
-           >
-              <div className="w-1.5 h-1.5 rounded-full bg-winf-primary animate-ping"></div>
-              A Única Barreira Contra a Commoditização
+             NÚCLEO WINF™ ALFA
            </motion.div>
            
            <motion.h1 
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.8 }}
-            className="text-5xl md:text-[10rem] font-black tracking-tighter leading-[0.75] mb-12 uppercase italic group"
+            className="text-5xl sm:text-7xl md:text-[8rem] font-black tracking-tighter leading-[0.85] mb-8 uppercase text-white"
            >
-              NÃO VENDEMOS <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-b from-winf-text_primary via-winf-text_primary to-winf-text_primary/10 relative">
-                PELÍCULAS.
-                <span className="absolute inset-0 text-winf-text_primary/20 blur-sm animate-glitch opacity-0 group-hover:opacity-100">PELÍCULAS.</span>
-              </span>
+              CONSTRUÍMOS<br/>O PADRÃO.
            </motion.h1>
-           
-           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, duration: 1 }}
-            className="mb-16 relative"
-           >
-              <div className="absolute -inset-4 bg-winf-text_primary/5 blur-2xl rounded-full"></div>
-              <h2 className="relative text-2xl md:text-5xl font-light tracking-[0.3em] text-winf-text_primary uppercase italic">
-                CONSTRUÍMOS O <span className="font-black">PADRÃO.</span>
-              </h2>
-           </motion.div>
 
            <motion.p 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-winf-text_muted text-lg md:text-2xl max-w-3xl mx-auto font-light leading-relaxed mb-20 tracking-tight"
+            className="text-white/60 text-lg md:text-2xl max-w-2xl mx-auto font-light leading-relaxed mb-12 tracking-wide"
            >
-              A WINF™ é o primeiro ecossistema integrado de alta performance. 
-              Unimos nanotecnologia, software de gestão e inteligência artificial em uma única barreira tecnológica.
+              O acesso ao ecossistema WINF™ não é uma questão de escolha, mas de qualificação. <strong className="text-white">Você não nos encontra, você é selecionado.</strong>
            </motion.p>
            
            <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="flex flex-col sm:flex-row gap-8 items-center w-full sm:w-auto"
+            className="flex flex-col sm:flex-row gap-6 items-center w-full sm:w-auto"
            >
-              <a href="#produtos" className="w-full sm:w-auto bg-winf-text_primary text-winf-background px-12 py-5 rounded-full text-[10px] font-black uppercase tracking-[0.4em] hover:bg-winf-text_primary/90 transition-all text-center shadow-[0_0_40px_rgba(var(--winf-text_primary-rgb),0.2)] active:scale-95">
-                Explorar Tecnologia
-              </a>
-              <button onClick={onNavigateToAccess} className="w-full sm:w-auto bg-transparent border border-winf-border text-winf-text_primary px-12 py-5 rounded-full text-[10px] font-black uppercase tracking-[0.4em] hover:bg-winf-surface transition-all backdrop-blur-sm active:scale-95">
+              <button onClick={onNavigateToAccess} className="w-full sm:w-auto bg-white text-black px-12 py-5 rounded-full text-[10px] font-black uppercase tracking-[0.4em] hover:bg-white/90 transition-all text-center">
                 Acesso ao Ecossistema
               </button>
+              <a href="#produtos" className="w-full sm:w-auto bg-transparent border border-white/20 text-white px-12 py-5 rounded-full text-[10px] font-black uppercase tracking-[0.4em] hover:bg-white/5 transition-all backdrop-blur-sm">
+                Explorar Tecnologia
+              </a>
            </motion.div>
         </div>
         
@@ -372,7 +439,7 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
         <div className="max-w-[1500px] mx-auto">
           <div className="text-center mb-16 md:mb-24">
             <h2 className="text-3xl md:text-6xl font-black tracking-tighter mb-6 uppercase text-winf-text_primary">Os 4 Pilares do Ecossistema</h2>
-            <p className="text-winf-text_muted text-base md:text-lg font-light max-w-2xl mx-auto">Quando produto, software, rede e dados operam em sincronia, criamos uma barreira tecnológica impossível de ser copiada.</p>
+            <p className="text-winf-text_primary text-base md:text-lg font-light max-w-2xl mx-auto">Quando produto, software, rede e dados operam em sincronia, criamos uma barreira tecnológica impossível de ser copiada.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
@@ -394,9 +461,123 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
                   <pillar.icon className="w-6 h-6 md:w-8 md:h-8" />
                 </div>
                 <h3 className="text-xl md:text-2xl font-black uppercase tracking-tighter mb-3 md:mb-4 text-winf-text_primary">{pillar.title}</h3>
-                <p className="text-winf-text_muted text-xs md:text-sm font-light leading-relaxed">{pillar.desc}</p>
+                <p className="text-winf-text_primary/80 text-xs md:text-sm font-light leading-relaxed">{pillar.desc}</p>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Molecular Twin Section - The Fusion */}
+      <section className="py-20 md:py-32 px-6 md:px-10 bg-winf-surface border-y border-winf-border relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-winf-primary/5 to-transparent blur-3xl pointer-events-none" />
+        <div className="max-w-[1500px] mx-auto">
+          <div className="flex flex-col lg:flex-row items-center gap-16 md:gap-24">
+            <motion.div 
+              initial={{ opacity: 0, x: -50 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="flex-1 space-y-8"
+            >
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-winf-primary/10 border border-winf-primary/20 rounded-full">
+                <div className="w-1.5 h-1.5 bg-winf-primary rounded-full animate-pulse" />
+                <span className="text-[10px] font-black tracking-widest text-winf-primary uppercase">Inovação Disruptiva 2026</span>
+              </div>
+              
+              <h2 className="text-4xl md:text-7xl font-black tracking-tighter uppercase italic leading-[0.9] text-white">
+                Gêmeo Digital & <br />
+                <span className="text-winf-primary">Eficiência Molecular</span>
+              </h2>
+              
+              <p className="text-winf-text_muted text-lg md:text-2xl font-light leading-snug">
+                Fundimos a análise de performance técnica de alta precisão com visualização molecular em tempo real. Uma ferramenta única para <span className="text-white font-bold">Clientes Final, Arquitetos e Técnicos</span>.
+              </p>
+
+              <div className="space-y-4 pt-4">
+                {[
+                  { title: 'Zona Vulnerável vs Protegida', desc: 'Visualize exatamente onde a radiação térmica e UV é bloqueada em nível atômico.' },
+                  { title: 'Digital Twin Sync', desc: 'Simulação precisa baseada nas especificações reais do vidro e da película escolhida.' },
+                  { title: 'Relatórios de Alta Precisão', desc: 'Dados técnicos decodificados para uma compreensão clara dos benefícios térmicos.' }
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-4 items-start">
+                    <div className="mt-1 p-1 bg-white/5 rounded-md text-winf-primary">
+                      <CheckCircle size={14} />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black uppercase text-white tracking-widest">{item.title}</h4>
+                      <p className="text-xs text-winf-text_muted leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-8">
+                <button 
+                  onClick={() => onNavigateToAccess && onNavigateToAccess(ViewState.MODULE_MOLECULAR_TWIN)}
+                  className="bg-winf-primary text-black px-10 py-4 rounded-full text-[10px] font-black uppercase tracking-[0.4em] hover:bg-white transition-all shadow-xl shadow-winf-primary/20 active:scale-95 flex items-center gap-3"
+                >
+                  Experimentar o Gêmeo Digital <ArrowRight size={16} />
+                </button>
+              </div>
+            </motion.div>
+
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
+              whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+              viewport={{ once: true }}
+              className="flex-1 w-full relative"
+            >
+              <div className="aspect-square bg-winf-background rounded-[3rem] border border-winf-border p-8 shadow-2xl relative overflow-hidden group">
+                <div className="absolute inset-0 bg-gradient-to-br from-winf-primary/10 via-transparent to-red-500/5 opacity-50" />
+                
+                {/* Visual Representation */}
+                <div className="h-full flex flex-col gap-4 relative z-10">
+                  <div className="flex-1 border border-red-500/20 rounded-2xl bg-red-500/[0.02] flex items-center justify-center relative overflow-hidden">
+                    <div className="absolute top-4 left-4 text-[8px] font-black uppercase tracking-widest text-red-500">Zona Vulnerável</div>
+                    <div className="flex gap-2">
+                      {[...Array(6)].map((_, i) => (
+                        <motion.div 
+                          key={i}
+                          animate={{ y: [0, 20, 0], opacity: [0.2, 0.8, 0.2] }}
+                          transition={{ duration: 2, repeat: Infinity, delay: i * 0.3 }}
+                          className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="w-full h-px bg-winf-primary/30 relative">
+                    <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-winf-primary rounded-full animate-ping" />
+                  </div>
+
+                  <div className="flex-1 border border-green-500/20 rounded-2xl bg-green-500/[0.02] flex items-center justify-center relative overflow-hidden">
+                    <div className="absolute top-4 left-4 text-[8px] font-black uppercase tracking-widest text-green-500">Zona Protegida</div>
+                    <div className="flex gap-2">
+                       <Shield className="text-green-500 animate-pulse" size={40} strokeWidth={1} />
+                    </div>
+                    <div className="absolute bottom-4 right-4 flex gap-1">
+                      <div className="w-1 h-3 bg-green-500 rounded-full" />
+                      <div className="w-1 h-3 bg-green-500 rounded-full" />
+                      <div className="w-1 h-3 bg-green-500 rounded-full" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Technical Overlay */}
+                <div className="absolute bottom-12 right-12 p-6 bg-winf-background border border-winf-border rounded-2xl shadow-2xl backdrop-blur-md">
+                   <div className="text-[10px] font-black uppercase tracking-widest text-winf-primary mb-2">Performance IR</div>
+                   <div className="text-4xl font-black text-white italic">99.8%</div>
+                   <div className="w-full h-1 bg-white/10 rounded-full mt-3 overflow-hidden">
+                     <motion.div 
+                       initial={{ width: 0 }}
+                       whileInView={{ width: '99.8%' }}
+                       transition={{ duration: 2, delay: 0.5 }}
+                       className="h-full bg-winf-primary"
+                     />
+                   </div>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -432,6 +613,55 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
               </div>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Founders / Origin Section */}
+      <section id="founders" className="py-20 md:py-32 bg-winf-background border-b border-winf-border">
+        <div className="max-w-[1500px] mx-auto px-6 md:px-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 md:gap-32 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-winf-border bg-transparent text-winf-text_muted text-[9px] font-bold uppercase tracking-[0.4em] mb-8">
+                Nossa Origem
+              </div>
+              <h2 className="text-4xl md:text-7xl font-black tracking-tighter leading-[0.9] mb-8 uppercase text-winf-text_primary">
+                Nascida no <span className="text-winf-primary italic">Brasil</span>, <br/>
+                Para o Mundo.
+              </h2>
+              <div className="space-y-6 text-white/70 text-base md:text-xl font-light leading-relaxed">
+                <p>
+                  WINF™ não é apenas uma marca de películas; é o resultado da união de um grupo de visionários do setor que identificaram a necessidade de elevar o padrão de proteção térmica e digital no mercado brasileiro.
+                </p>
+                <p>
+                  Com raízes fundadas no Brasil, estabelecemos parcerias globais estratégicas para trazer o que existe de mais avançado em engenharia de materiais: a precisão tecnológica Americana para nossa linha Select™ e a inovação disruptiva Chinesa para as linhas AeroCore™, NeoSkin™ e Glass+ Home.
+                </p>
+              </div>
+            </motion.div>
+            <div className="relative aspect-square rounded-[60px] overflow-hidden border border-winf-border group">
+              <img 
+                src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop" 
+                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000"
+                alt="Winf Visionaries"
+                referrerPolicy="no-referrer"
+              />
+              <div className="absolute inset-0 bg-winf-background/20 mix-blend-multiply"></div>
+              <div className="absolute bottom-12 left-12 right-12 p-8 bg-winf-background/80 backdrop-blur-xl border border-winf-border rounded-3xl">
+                <div className="flex items-center gap-6">
+                  <div className="w-12 h-12 rounded-full border border-winf-border flex items-center justify-center">
+                    <History size={20} className="text-winf-primary" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-black uppercase tracking-widest text-winf-text_primary">Legado em Construção</h4>
+                    <p className="text-[10px] text-winf-text_muted font-mono uppercase tracking-widest mt-1">Founding Visionaries Group</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -518,71 +748,46 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
               </div>
            </div>
 
-           {/* Tab Switcher */}
-           <div className="flex flex-wrap gap-4 mb-16 border-b border-winf-border pb-8">
-              {WINF_CONSTANTS.portfolio.lines.map((line) => (
-                <button 
-                  key={line.id}
-                  onClick={() => setActiveLine(line.id)}
-                  className={`px-8 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] transition-all relative overflow-hidden ${
-                    activeLine === line.id 
-                      ? 'bg-winf-text_primary text-winf-background' 
-                      : 'bg-winf-surface text-winf-text_muted hover:bg-winf-surface/80 hover:text-winf-text_primary'
-                  }`}
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+             {PRODUCT_CATALOG.map((product, idx) => (
+                <motion.div 
+                  key={product.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: idx * 0.1, duration: 0.5 }}
+                  className="group cursor-pointer bg-[#0A0A0A] border border-white/5 rounded-2xl overflow-hidden hover:border-white/30 transition-all hover:-translate-y-2 flex flex-col"
+                  onClick={() => onSelectProduct && onSelectProduct(product.id)}
                 >
-                  {line.name}
-                  {activeLine === line.id && (
-                    <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-1 bg-winf-primary" />
-                  )}
-                </button>
+                  <div className="relative h-64 overflow-hidden">
+                    <div 
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                      style={{ backgroundImage: `url(${product.image})` }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                    <div className="absolute top-4 left-4 bg-black/50 backdrop-blur px-3 py-1 text-[10px] uppercase tracking-widest text-[#FFF] border border-white/20 rounded-full font-semibold">
+                      {product.category === 'arch' ? 'Arquitetura' : 'Automotivo'}
+                    </div>
+                  </div>
+                  <div className="p-8 flex-1 flex flex-col">
+                    <div className="text-[10px] text-white/40 uppercase tracking-widest mb-2 font-bold">{product.badge}</div>
+                    <h3 className="text-2xl font-light mb-1 text-white">{product.name}</h3>
+                    <h4 className="text-xs text-white/60 italic mb-4">{product.subname}</h4>
+                    <p className="text-sm text-white/50 font-light line-clamp-3 mb-8 flex-1">
+                      {product.shortDescription}
+                    </p>
+                    <div className="flex items-center justify-between mt-auto">
+                       <div className="flex items-center gap-2 text-xs text-white/40">
+                         <Shield size={14} className="text-white/40" /> {product.keyMetrics.warranty}
+                       </div>
+                       <div className="text-[10px] uppercase tracking-widest flex items-center gap-2 text-white/50 group-hover:text-white transition-colors font-bold">
+                         Ver Detalhes <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                       </div>
+                    </div>
+                  </div>
+                </motion.div>
               ))}
            </div>
-
-           <AnimatePresence mode="wait">
-             <motion.div 
-               key={activeLine}
-               initial={{ opacity: 0, y: 20 }}
-               animate={{ opacity: 1, y: 0 }}
-               exit={{ opacity: 0, y: -20 }}
-               className="space-y-20"
-             >
-                {/* Line Header */}
-                <div className="max-w-3xl">
-                  <div className="flex items-center gap-4 mb-4">
-                    <span className="px-3 py-1 bg-winf-primary/10 text-winf-primary text-[8px] font-black uppercase tracking-[0.3em] rounded">
-                      {WINF_CONSTANTS.portfolio.lines.find(l => l.id === activeLine)?.context}
-                    </span>
-                  </div>
-                  <h3 className="text-4xl font-black uppercase tracking-tighter mb-6 text-winf-text_primary">
-                    {WINF_CONSTANTS.portfolio.lines.find(l => l.id === activeLine)?.name}
-                  </h3>
-                  <p className="text-winf-text_muted text-lg font-light leading-relaxed">
-                    {WINF_CONSTANTS.portfolio.lines.find(l => l.id === activeLine)?.desc}
-                  </p>
-                </div>
-
-                {/* Line Items */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  {WINF_CONSTANTS.portfolio.lines.find(l => l.id === activeLine)?.items.length ? (
-                    WINF_CONSTANTS.portfolio.lines.find(l => l.id === activeLine)?.items.map((item) => (
-                      <FilmCard 
-                        key={item.id}
-                        item={item}
-                        onSelect={() => {}}
-                      />
-                    ))
-                  ) : (
-                    <div className="col-span-full py-20 border border-dashed border-winf-border rounded-[40px] flex flex-col items-center justify-center text-center">
-                      <div className="w-16 h-16 bg-winf-surface rounded-full flex items-center justify-center text-winf-text_muted/20 mb-6">
-                        <Cpu size={32} />
-                      </div>
-                      <h4 className="text-xl font-black uppercase tracking-widest text-winf-text_muted/40 mb-2">Engenharia em Processamento</h4>
-                      <p className="text-winf-text_muted/20 text-sm font-light">As especificações técnicas desta linha serão liberadas em breve.</p>
-                    </div>
-                  )}
-                </div>
-             </motion.div>
-           </AnimatePresence>
         </div>
       </section>
 
@@ -714,6 +919,13 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
         </div>
       </section>
 
+      {/* Licenciamento Section */}
+      <section id="licenciamento" className="py-20 md:py-40 px-6 md:px-10 bg-winf-background border-t border-winf-border">
+        <div className="max-w-[1500px] mx-auto">
+          <LicensingPlans />
+        </div>
+      </section>
+
       {/* Rede Operacional */}
       <section id="rede" className="py-20 md:py-40 px-6 md:px-10 bg-winf-background border-t border-winf-border">
         <div className="max-w-[1500px] mx-auto">
@@ -750,19 +962,19 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-32 items-center">
             <div>
               <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-winf-border bg-transparent text-winf-text_muted text-[9px] font-bold uppercase tracking-[0.4em] mb-8 lg:mb-10">
-                WINF™ THERMAL SHIELD SIMULATOR
+                SIMULADOR TÉRMICO WINF™
               </div>
               <h2 className="text-3xl lg:text-7xl font-black tracking-tighter leading-[0.9] mb-6 lg:mb-10 uppercase text-winf-text_primary">
-                Visualize a <span className="text-winf-primary italic">Eficiência</span> Molecular
+                Veja o calor <span className="text-winf-primary italic">Desaparecer.</span>
               </h2>
               <p className="text-winf-text_muted text-base lg:text-xl font-light leading-relaxed mb-8 lg:mb-12 max-w-xl">
-                Ajuste a intensidade da radiação solar e compare em tempo real como a tecnologia WINF™ mantém o equilíbrio térmico enquanto películas comuns falham.
+                Arraste o medidor para aumentar a força do sol e veja, na prática, como a blindagem WINF™ mantém o seu ambiente fresco enquanto a película comum deixa todo o calor entrar.
               </p>
 
               <div className="space-y-8 md:space-y-12 bg-winf-surface p-6 md:p-10 rounded-[30px] md:rounded-[40px] border border-winf-border">
                 <div className="space-y-6">
                   <div className="flex justify-between items-end">
-                    <label className="text-[10px] font-black uppercase tracking-[0.4em] text-winf-text_muted/40">Intensidade Solar (W/m²)</label>
+                    <label className="text-[10px] font-black uppercase tracking-[0.4em] text-winf-text_muted/40">Força do Sol (Calor Externo)</label>
                     <span className="text-2xl font-mono font-bold text-winf-primary">{sunIntensity * 10}</span>
                   </div>
                   <input 
@@ -777,15 +989,15 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
 
                 <div className="grid grid-cols-2 gap-10">
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3 text-red-500/60">
+                    <div className="flex items-center gap-3 text-orange-500/60">
                       <Thermometer size={16} />
                       <span className="text-[9px] font-black uppercase tracking-widest">Película Comum</span>
                     </div>
                     <div className="text-4xl font-black tracking-tighter text-winf-text_primary">{commonTemp}°C</div>
-                    <div className="w-full h-1 bg-red-500/20 rounded-full overflow-hidden">
+                    <div className="w-full h-1 bg-orange-500/20 rounded-full overflow-hidden">
                       <motion.div 
                         animate={{ width: `${(commonTemp / 50) * 100}%` }}
-                        className="h-full bg-red-500"
+                        className="h-full bg-orange-500"
                       />
                     </div>
                   </div>
@@ -813,38 +1025,39 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
               {/* Heat Overlay */}
               <motion.div 
                 animate={{ opacity: sunIntensity / 100 * 0.6 }}
-                className="absolute inset-0 bg-gradient-to-t from-red-500/40 to-transparent mix-blend-overlay"
+                className="absolute inset-0 bg-gradient-to-t from-orange-500/30 to-transparent mix-blend-overlay"
               />
 
               {/* Glass Comparison */}
               <div className="absolute inset-0 flex">
-                <div className="w-1/2 h-full border-r border-winf-border/20 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-red-500/10 backdrop-blur-[2px]"></div>
-                  <div className="absolute top-10 left-10 text-[10px] font-black uppercase tracking-[0.4em] text-winf-text_primary/40">ZONA_VULNERÁVEL</div>
+                <div className="w-1/2 h-full border-r-2 border-white/40 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-orange-500/10"></div>
+                  <div className="absolute top-10 left-6 text-[8px] md:text-[10px] font-black uppercase tracking-[0.4em] text-white/60">SEM PROTEÇÃO</div>
                 </div>
                 <div className="w-1/2 h-full relative overflow-hidden">
-                  <div className="absolute inset-0 bg-winf-primary/5 backdrop-blur-[10px]"></div>
-                  <div className="absolute top-10 right-10 text-[10px] font-black uppercase tracking-[0.4em] text-winf-primary">ZONA_PROTEGIDA</div>
+                  <div className="absolute inset-0 bg-[#0a0a0a]/20"></div>
+                  <div className="absolute top-10 right-6 text-[8px] md:text-[10px] font-black uppercase tracking-[0.4em] text-winf-primary">BLINDAGEM WINF™</div>
                   
                   {/* Scanning Line */}
                   <motion.div 
                     animate={{ top: ['-10%', '110%'] }}
                     transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                    className="absolute left-0 right-0 h-px bg-winf-primary/50 shadow-[0_0_20px_rgba(var(--winf-primary-rgb),0.5)]"
+                    className="absolute left-0 right-0 h-px bg-winf-primary/80 shadow-[0_0_15px_rgba(var(--winf-primary-rgb),0.8)]"
                   />
                 </div>
               </div>
 
-              <div className="absolute bottom-12 left-1/2 -translate-x-1/2 px-8 py-4 bg-winf-background/80 backdrop-blur-xl border border-winf-border rounded-2xl">
-                <div className="flex items-center gap-6">
-                  <div className="text-center">
-                    <div className="text-[8px] font-black text-winf-text_muted/40 uppercase tracking-widest mb-1">Redução IR</div>
-                    <div className="text-xl font-black text-winf-text_primary">99.9%</div>
+              {/* Mobile-friendly bottom stats card */}
+              <div className="absolute bottom-6 md:bottom-12 w-[90%] md:w-auto left-1/2 -translate-x-1/2 px-4 md:px-8 py-3 md:py-4 bg-[#0a0a0a]/90 backdrop-blur-md border border-white/10 rounded-[20px] shadow-2xl">
+                <div className="flex items-center justify-center gap-4 md:gap-8 min-w-[200px]">
+                  <div className="text-center w-1/2 md:w-auto">
+                    <div className="text-[7px] md:text-[8px] font-black text-white/50 uppercase tracking-widest mb-1">Redução IR</div>
+                    <div className="text-sm md:text-xl font-black text-white">99.9%</div>
                   </div>
-                  <div className="w-px h-8 bg-winf-border"></div>
-                  <div className="text-center">
-                    <div className="text-[8px] font-black text-winf-text_muted/40 uppercase tracking-widest mb-1">Bloqueio UV</div>
-                    <div className="text-xl font-black text-winf-text_primary">100%</div>
+                  <div className="w-px h-8 bg-white/20"></div>
+                  <div className="text-center w-1/2 md:w-auto">
+                    <div className="text-[7px] md:text-[8px] font-black text-white/50 uppercase tracking-widest mb-1">Bloqueio UV</div>
+                    <div className="text-sm md:text-xl font-black text-white">100%</div>
                   </div>
                 </div>
               </div>
@@ -857,8 +1070,8 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
         </div>
       </section>
 
-      {/* Kiosk Retail Gallery Section */}
-      <section className="py-20 lg:py-40 px-6 lg:px-10 bg-winf-background relative overflow-hidden border-t border-winf-border">
+      {/* Kiosk Architecture Gallery Section */}
+      <section id="kiosks" className="py-20 lg:py-40 px-6 lg:px-10 bg-winf-background relative overflow-hidden border-t border-winf-border">
         <div className="max-w-[1500px] mx-auto relative z-10">
           <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-16 lg:mb-24">
             <div className="max-w-2xl">
@@ -866,10 +1079,10 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
                 Visualização de Unidade
               </div>
               <h2 className="text-3xl lg:text-7xl font-black tracking-tighter leading-[0.9] uppercase text-winf-text_primary">
-                O Padrão <span className="text-winf-primary italic">Kiosk Retail</span>
+                O Padrão <span className="text-winf-primary italic">Kiosk Architecture</span>
               </h2>
-              <p className="text-winf-text_muted/40 text-sm lg:text-lg font-light mt-6 uppercase tracking-widest">
-                Ponto de venda ágil em locais de alto fluxo. Design compacto, baixo custo operacional e alta rotatividade.
+              <p className="text-winf-text_muted/40 text-sm lg:text-lg font-light mt-6 uppercase tracking-widest leading-relaxed">
+                Ponto de experiência imersiva e captação de projetos de alto padrão em locais de alto fluxo. Consultoria técnica, agendamento WINF OS e realidade virtual.
               </p>
             </div>
           </div>
@@ -877,19 +1090,19 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               { 
-                title: "Design Compacto", 
-                img: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?q=80&w=2072&auto=format&fit=crop",
-                tag: "ÁGIL"
+                title: "Imersão VR", 
+                img: (WINF_CONSTANTS as any).assets.kioskVR,
+                tag: "HIGH-TECH"
               },
               { 
-                title: "Atendimento Rápido", 
-                img: "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?q=80&w=2072&auto=format&fit=crop",
-                tag: "FLUXO"
+                title: "Consultoria Elite", 
+                img: (WINF_CONSTANTS as any).assets.kioskImmersive,
+                tag: "SERVICE"
               },
               { 
-                title: "Display Tecnológico", 
-                img: "https://images.unsplash.com/photo-1556742044-3c52d6e88c62?q=80&w=2072&auto=format&fit=crop",
-                tag: "VITRINE"
+                title: "Packaging Design", 
+                img: (WINF_CONSTANTS as any).assets.kioskPackaging,
+                tag: "PREMIUM"
               }
             ].map((item, idx) => (
               <motion.div 
@@ -916,7 +1129,7 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
       </section>
 
       {/* AeroCore Studio Gallery Section */}
-      <section className="py-20 lg:py-40 px-6 lg:px-10 bg-winf-background relative overflow-hidden">
+      <section id="franquias" className="py-20 lg:py-40 px-6 lg:px-10 bg-winf-background relative overflow-hidden">
         <div className="max-w-[1500px] mx-auto relative z-10">
           <div className="flex flex-col md:flex-row justify-between items-end gap-8 mb-16 lg:mb-24">
             <div className="max-w-2xl">
@@ -1100,6 +1313,48 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-winf-background/20 to-transparent -translate-x-full group-hover/btn:animate-shimmer"></div>
                 </button>
               </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* WINF Dark Factory / Universo Dark Preview */}
+      <section id="dark-factory" className="py-20 md:py-40 px-6 md:px-10 bg-black border-t border-winf-border relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-900/10 rounded-full blur-[120px] pointer-events-none"></div>
+        <div className="max-w-[1500px] mx-auto relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-32 items-center">
+            <div>
+              <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full border border-purple-900/30 bg-purple-900/5 text-purple-400 text-[9px] font-bold uppercase tracking-[0.4em] mb-8">
+                Board Members Access Only
+              </div>
+              <h2 className="text-3xl lg:text-7xl font-black tracking-tighter leading-[0.9] mb-6 lg:mb-10 uppercase text-white">
+                Winf <span className="text-zinc-600 italic">Dark</span> Factory
+              </h2>
+              <p className="text-zinc-400 text-sm lg:text-lg font-light leading-relaxed mb-8 lg:mb-12 max-w-xl uppercase tracking-widest">
+                Onde a tecnologia encontra o equity. Conheça os bastidores da infraestrutura que sustenta o ecossistema WINF™ no Brasil.
+              </p>
+              
+              <div className="flex gap-4">
+                <div className="p-6 border border-white/5 bg-white/5 rounded-2xl">
+                  <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">Valuation Projetado</p>
+                  <p className="text-2xl text-white font-bold font-mono">R$ 90.0M</p>
+                </div>
+                <div className="p-6 border border-white/5 bg-white/5 rounded-2xl">
+                  <p className="text-[10px] text-zinc-500 font-black uppercase tracking-widest mb-2">Target Growth</p>
+                  <p className="text-2xl text-white font-bold font-mono">5X Equity</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative aspect-[16/9] rounded-[40px] overflow-hidden border border-white/10 group bg-zinc-900/50 flex items-center justify-center">
+              <div className="text-center">
+                <Lock size={40} className="text-zinc-700 mx-auto mb-6" />
+                <p className="text-[10px] text-zinc-600 font-black uppercase tracking-[0.5em]">Acesso em Breve</p>
+                <p className="text-[8px] text-zinc-800 mt-2 font-mono">MOD_DARK_FACTORY_v1.0</p>
+              </div>
+              
+              {/* Decorative scanline */}
+              <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-purple-500/5 to-transparent h-20 w-full animate-scanline"></div>
             </div>
           </div>
         </div>
@@ -1345,13 +1600,13 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
               <div className="p-6 border-b border-winf-border flex items-center justify-between bg-winf-text_primary/5 relative z-20">
                 <div className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-xl bg-winf-text_primary flex items-center justify-center text-winf-background">
-                    <Bot size={20} />
+                    <User size={20} />
                   </div>
                   <div>
-                    <h3 className="text-sm font-black uppercase tracking-widest text-winf-text_primary">NEUROMESH.AI™</h3>
+                    <h3 className="text-sm font-black uppercase tracking-widest text-winf-text_primary">TIAGO | WINF™</h3>
                     <div className="flex items-center gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                      <span className="text-[8px] font-bold text-winf-text_muted/40 uppercase tracking-widest">Core Processing Active</span>
+                      <span className="text-[8px] font-bold text-winf-text_muted/40 uppercase tracking-widest">Consultor Online</span>
                     </div>
                   </div>
                 </div>
@@ -1383,7 +1638,7 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
                         ? 'bg-winf-text_primary/5 border border-winf-border text-winf-text_primary/80' 
                         : 'bg-winf-text_primary text-winf-background font-bold ml-auto'
                     }`}>
-                      {msg.role === 'ai' && <div className="text-[8px] font-black text-winf-primary mb-2 tracking-[0.3em] uppercase">NEUROMESH_CORE_V5.0</div>}
+                      {msg.role === 'ai' && <div className="text-[8px] font-black text-winf-primary mb-2 tracking-[0.3em] uppercase">WINF™ ATENDIMENTO</div>}
                       {msg.text}
                     </div>
                   </motion.div>
@@ -1402,16 +1657,6 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
                 <div ref={chatEndRef} />
               </div>
 
-              {/* Quick Actions / WhatsApp Link */}
-              <div className="px-6 py-2 border-t border-winf-border bg-winf-text_primary/[0.02] flex justify-center">
-                <button 
-                  onClick={() => window.open('https://wa.me/5513999191510', '_blank')}
-                  className="flex items-center gap-2 text-[9px] font-black uppercase tracking-[0.2em] text-green-500 hover:text-green-400 transition-colors"
-                >
-                  <MessageCircle size={12} />
-                  Não encontrou o que procurava? Fale com um especialista
-                </button>
-              </div>
 
               {/* Chat Input */}
               <div className="p-6 border-t border-winf-border bg-winf-text_primary/5 relative z-20">
@@ -1435,15 +1680,6 @@ const InstitutionalSite: React.FC<InstitutionalSiteProps> = ({ onBack, territory
           )}
         </AnimatePresence>
 
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setAiOpen(!aiOpen)}
-          className="w-16 h-16 bg-winf-text_primary text-winf-background rounded-full flex items-center justify-center shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative group"
-        >
-          <div className="absolute -inset-2 bg-winf-text_primary/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          {aiOpen ? <X size={24} /> : <Bot size={24} />}
-        </motion.button>
       </div>
     </div>
   );

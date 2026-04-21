@@ -26,12 +26,14 @@ interface ModuleWinfPrecisionProps {
 }
 
 const ModuleWinfPrecision: React.FC<ModuleWinfPrecisionProps> = ({ onBack }) => {
-    const { stockItems, updateStock, gamify, user } = useWinf();
+    const { stockItems, updateStock, gamify, user, products } = useWinf();
     const [panes, setPanes] = useState<WindowPane[]>([]);
     const [newPane, setNewPane] = useState({ width: '', height: '', quantity: '1', label: '' });
     const [bulkInput, setBulkInput] = useState('');
     const [showBulkInput, setShowBulkInput] = useState(false);
+    const [selectedProductId, setSelectedProductId] = useState('');
     const [selectedStockId, setSelectedStockId] = useState('');
+    const [customRollWidth, setCustomRollWidth] = useState(1.52);
     const [calculation, setCalculation] = useState<{
         totalLinearMeters: number;
         totalArea: number;
@@ -40,7 +42,8 @@ const ModuleWinfPrecision: React.FC<ModuleWinfPrecisionProps> = ({ onBack }) => 
         layout: any[];
     } | null>(null);
 
-    const rollWidth = 1.52; // Standard roll width in meters
+    const activeProduct = products.find(p => p.id === selectedProductId);
+    const rollWidth = activeProduct?.available_widths?.[0] || customRollWidth;
 
     const addPane = (customPane?: { width: number, height: number, label: string }) => {
         const width = customPane ? customPane.width : parseFloat(newPane.width);
@@ -199,8 +202,37 @@ const ModuleWinfPrecision: React.FC<ModuleWinfPrecisionProps> = ({ onBack }) => 
                 <div className="flex gap-4">
                     <div className="bg-winf-surface border border-winf-border px-4 py-2 rounded-xl flex items-center gap-2">
                         <Package size={18} className="text-winf-text_muted" />
-                        <span className="text-xs font-bold text-winf-text_primary uppercase tracking-widest">Rolo Padrão: 1.52m</span>
+                        <select 
+                            value={selectedProductId}
+                            onChange={(e) => setSelectedProductId(e.target.value)}
+                            className="bg-transparent text-xs font-bold text-winf-text_primary uppercase tracking-widest outline-none border-none cursor-pointer"
+                        >
+                            <option value="" className="bg-winf-background">Personalizado</option>
+                            {products.map(p => (
+                                <option key={p.id} value={p.id} className="bg-winf-background">{p.name}</option>
+                            ))}
+                        </select>
                     </div>
+
+                    {!selectedProductId && (
+                         <div className="bg-winf-surface border border-winf-border px-4 py-2 rounded-xl flex items-center gap-2">
+                            <span className="text-[10px] font-black text-winf-text_muted uppercase tracking-widest">Largura:</span>
+                            <input 
+                                type="number" 
+                                step="0.01" 
+                                value={customRollWidth}
+                                onChange={(e) => setCustomRollWidth(parseFloat(e.target.value))}
+                                className="bg-transparent text-xs font-bold text-winf-text_primary w-16 outline-none border-none"
+                            />
+                            <span className="text-[10px] font-black text-winf-text_muted uppercase">m</span>
+                        </div>
+                    )}
+
+                    {selectedProductId && (
+                        <div className="bg-winf-surface border border-winf-border px-4 py-2 rounded-xl flex items-center gap-2">
+                            <span className="text-xs font-bold text-winf-primary uppercase tracking-widest">Rolo: {rollWidth}m</span>
+                        </div>
+                    )}
                 </div>
             </div>
 

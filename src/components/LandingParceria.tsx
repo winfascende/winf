@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, Zap, BookOpen, Layers, CheckCircle, Star, ArrowRight, ShieldCheck, Target, ArrowLeft, Check, Diamond } from 'lucide-react';
+import { ChevronLeft, Zap, BookOpen, Layers, CheckCircle, Star, ArrowRight, ShieldCheck, Target, ArrowLeft, Check, Diamond, Download } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { generateCommercialDeckPDF } from '../lib/pdfGenerator';
 
 interface LandingParceriaProps {
   onBack: () => void;
@@ -14,6 +15,7 @@ const LandingParceria: React.FC<LandingParceriaProps> = ({ onBack, onActivate, p
   const isElite = planType === 'elite';
   const isSelect = planType === 'select';
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   const heroImages = [
     'https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?q=80&w=2070', // Porsche
@@ -27,60 +29,66 @@ const LandingParceria: React.FC<LandingParceriaProps> = ({ onBack, onActivate, p
     }, 5000);
     return () => clearInterval(timer);
   }, []);
+
+  const handleDownloadPdf = () => {
+    setIsGeneratingPdf(true);
+    setTimeout(() => {
+      generateCommercialDeckPDF();
+      setIsGeneratingPdf(false);
+    }, 1200);
+  };
   
   const planData = {
     select: {
       title: 'SELECT',
-      subtitle: 'Certified Partner',
+      subtitle: 'O Ponto de Ignição',
       price: '2.500',
       icon: CheckCircle,
       benefits: [
-        'Acesso ao Portal Winf™ Academy',
+        'Acesso à Academia WINF',
         'Treinamentos Online Completos',
-        'Comunidade Exclusiva no Discord',
-        'Suporte via Chat',
-        'Selo de Parceiro Select'
+        'Comunidade de Networking (Discord)',
+        'Suporte Base via Chat',
+        'Precificação de Parceiro (Maior Margem)'
       ]
     },
     elite: {
       title: 'ELITE',
-      subtitle: 'Elite Installer',
+      subtitle: 'O Instalador Cirúrgico',
       price: '5.000',
       icon: Star,
       benefits: [
-        'Tudo do Select',
-        'Certificação Técnica Elite',
-        'Kit de Ferramentas Profissional',
-        'Tabela de Preços Parceiro Elite',
-        'Acesso ao Winf Cut™ (Avançado)'
+        'Acesso ao WINF CUT™ (Software)',
+        'Certificação Técnica Rigorosa',
+        'Kit Exclusivo de Ferramentas Pro',
+        'Tabela de Precificação Diamante',
+        'Acesso Restrito a Lançamentos'
       ]
     },
     advanced: {
       title: 'ADVANCED',
-      subtitle: 'Licenciado Oficial',
+      subtitle: 'O Ecossistema Dominante',
       price: '7.500',
       icon: Zap,
       benefits: [
-        'Acesso ao Portal Winf™ PARTNERS',
-        'One Page Personalizada',
-        'Treinamento Presencial',
-        'Kit de Produtos Inicial',
-        'Marketing Digital Ativo',
-        'Certificação Oficial'
+        'Marketing Digital Local Ativado',
+        'One Page Personalizada (Site)',
+        'Treinamento Presencial Imersivo',
+        'Kit Inicial de Películas Premium',
+        'Captação de Projetos High-End'
       ]
     },
     enterprise: {
       title: 'ENTERPRISE',
-      subtitle: 'Board Member',
+      subtitle: 'A Cadeira na Mesa (Board Member)',
       price: '15.000',
       icon: Diamond,
       benefits: [
-        'Benefícios do ADVANCED',
-        'Acompanhamento de Negócio',
-        'Consultoria Estratégica',
-        'Estratégia GEOFENCING',
-        'Suporte Integral 24/7',
-        'Participação no Conselho'
+        'Reuniões Diretas c/ Fundadores',
+        'Estratégia Local de Geofencing',
+        'Acompanhamento Mensal de KPIs',
+        'Suporte Crítico Linha Direta 24/7',
+        'Prioridade em Novas Distribuições'
       ]
     }
   };
@@ -147,13 +155,28 @@ const LandingParceria: React.FC<LandingParceriaProps> = ({ onBack, onActivate, p
             Você não está apenas comprando um kit. Você está adquirindo uma infraestrutura de guerra para dominar o setor de Window Film na sua região com o modelo <strong>{currentPlan.title}</strong>.
           </p>
           
-          <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto mt-6">
             <button 
                 onClick={handleCtaClick}
-                className="w-full md:w-auto px-10 md:px-14 py-5 md:py-6 bg-white text-black rounded-full font-bold text-[10px] md:text-xs uppercase tracking-[0.2em] hover:bg-white/90 transition-all shadow-[0_0_40px_rgba(255,255,255,0.1)] flex items-center justify-center gap-3 group relative overflow-hidden"
+                className="w-full sm:w-auto px-10 md:px-14 py-5 bg-white text-black rounded-full font-bold text-[10px] md:text-xs uppercase tracking-[0.2em] hover:bg-white/90 transition-all shadow-[0_0_40px_rgba(255,255,255,0.1)] flex items-center justify-center gap-3 group relative overflow-hidden"
             >
                 <span className="relative z-10 flex items-center gap-2">Ativar {currentPlan.title} <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" /></span>
                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+            </button>
+            <button 
+                onClick={handleDownloadPdf}
+                disabled={isGeneratingPdf}
+                className={`w-full sm:w-auto px-8 py-5 rounded-full font-bold text-[10px] md:text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 border ${
+                    isGeneratingPdf 
+                    ? 'border-white/10 bg-white/5 text-gray-400 cursor-wait'
+                    : 'border-white/30 text-white hover:bg-white hover:text-black'
+                }`}
+            >
+                {isGeneratingPdf ? (
+                    <><div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div> GERANDO PDF...</>
+                ) : (
+                    <><Download size={16} /> BAIXAR PROSPECTO</>
+                )}
             </button>
           </div>
         </div>

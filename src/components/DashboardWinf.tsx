@@ -20,7 +20,9 @@ import {
   Link,
   Grid,
   MessageSquare,
-  Box
+  Box,
+  Cpu,
+  MapPin
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useWinf } from '../contexts/WinfContext';
@@ -93,7 +95,7 @@ const DashboardWinf: React.FC<DashboardWinfProps> = ({ user, onChangeView }) => 
   const highPriorityLeads = leads.slice(0, 4);
 
   const systemActivity = [
-    { id: 1, type: 'lead', text: 'Novo lead detectado em Santos (BlackPro)', time: '2m atrás' },
+    { id: 1, type: 'lead', text: `Novo lead detectado em ${user?.city || 'Santos'} (BlackPro)`, time: '2m atrás' },
     { id: 2, type: 'sale', text: 'Venda confirmada: Kit Studio Alpha', time: '15m atrás' },
     { id: 3, type: 'rank', text: 'Você subiu para o Top 10 regional', time: '1h atrás' },
   ];
@@ -137,6 +139,7 @@ const DashboardWinf: React.FC<DashboardWinfProps> = ({ user, onChangeView }) => 
                     <h1 className="text-2xl sm:text-4xl lg:text-7xl font-black text-winf-text_primary tracking-tighter leading-[0.9] uppercase italic">
                         BEM-VINDO AO <br />
                         <span className="text-winf-primary">ECOSSISTEMA WINF™</span>
+                        <div className="text-winf-text_secondary text-xl lg:text-3xl mt-4">PARTNERS</div>
                     </h1>
                     <p className="text-base lg:text-xl text-winf-text_secondary font-light max-w-lg leading-relaxed">
                         Você não é apenas um aplicador. Você é um <span className="text-winf-text_primary font-bold italic">Parceiro Estratégico</span>. Use nossas ferramentas de elite para escalar seu faturamento.
@@ -173,7 +176,7 @@ const DashboardWinf: React.FC<DashboardWinfProps> = ({ user, onChangeView }) => 
 
         {/* Action Grid - Mobile Friendly */}
         <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-6 gap-4">
-            <QuickAction label="Atendimento" icon={MessageSquare} color="text-winf-text_primary" onClick={() => onChangeView(ViewState.MODULE_CONSULTANCY_LINK)} />
+            <QuickAction label="Twin Molecular" icon={Cpu} color="text-winf-primary shadow-[0_0_15px_rgba(255,255,255,0.1)]" onClick={() => onChangeView(ViewState.MODULE_MOLECULAR_TWIN)} />
             <QuickAction label="Orçamentos" icon={FileText} color="text-winf-text_secondary" onClick={() => onChangeView(ViewState.MODULE_QUOTES)} />
             <QuickAction label="Winf Precision™" icon={Scissors} color="text-winf-text_secondary" onClick={() => onChangeView(ViewState.MODULE_WINF_CUT)} />
             <QuickAction 
@@ -183,7 +186,8 @@ const DashboardWinf: React.FC<DashboardWinfProps> = ({ user, onChangeView }) => 
                 onClick={() => onChangeView(isAdmin ? ViewState.MODULE_THE_BOARD : ViewState.MODULE_CONNECT)} 
             />
             <QuickAction label="Academy" icon={GraduationCap} color="text-winf-text_secondary" onClick={() => onChangeView(ViewState.MODULE_ACADEMY)} />
-            <QuickAction label="Estoque" icon={Box} color="text-winf-text_muted" onClick={() => onChangeView(ViewState.MODULE_STOCK)} />
+            <QuickAction label="Unidade" icon={MapPin} color="text-winf-primary" onClick={() => onChangeView(ViewState.CITY_ONE_PAGE)} />
+            <QuickAction label="Atendimento" icon={MessageSquare} color="text-winf-text_primary" onClick={() => onChangeView(ViewState.MODULE_CONSULTANCY_LINK)} />
         </motion.div>
 
         {/* Admin Control Room - Elite Access */}

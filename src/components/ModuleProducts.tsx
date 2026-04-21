@@ -112,6 +112,27 @@ const ModuleProducts: React.FC = () => {
                     </div>
                   </div>
 
+                  {product.tech_specs && (
+                    <div className="grid grid-cols-4 gap-2 pt-4 border-t border-winf-border">
+                      <div className="text-center">
+                        <div className="text-[9px] font-black text-winf-text_muted uppercase tracking-tighter">VLT</div>
+                        <div className="text-xs font-bold text-white">{product.tech_specs.vlt}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-[9px] font-black text-winf-text_muted uppercase tracking-tighter">IRR</div>
+                        <div className="text-xs font-bold text-winf-primary">{product.tech_specs.irr}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-[9px] font-black text-winf-text_muted uppercase tracking-tighter">UVR</div>
+                        <div className="text-xs font-bold text-white">{product.tech_specs.uvr}</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-[9px] font-black text-winf-text_muted uppercase tracking-tighter">TSER</div>
+                        <div className="text-xs font-bold text-white">{product.tech_specs.tser}</div>
+                      </div>
+                    </div>
+                  )}
+
                   {product.availableWidths && product.availableWidths.length > 0 && (
                     <div>
                       <h4 className="text-[10px] font-black text-winf-text_muted uppercase tracking-widest mb-3">Larguras Disponíveis (Roll Widths)</h4>

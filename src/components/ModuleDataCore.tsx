@@ -71,10 +71,14 @@ const ModuleDataCore: React.FC<{onBack: () => void}> = ({ onBack }) => {
 
   const filteredDocs = documentItems.filter(d => activeCategory === 'Todos' || d.category === activeCategory);
 
+    const handleDownloadPDF = () => {
+        window.print();
+    };
+
   return (
-    <div className="flex flex-col h-full animate-fade-in bg-black">
+    <div className="flex flex-col h-full animate-fade-in bg-black print:bg-white print:text-black">
         {/* Header Section */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end border-b border-white/[0.05] pb-6 md:pb-10 mb-6 md:mb-10 gap-6 md:gap-8">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end border-b border-white/[0.05] pb-6 md:pb-10 mb-6 md:mb-10 gap-6 md:gap-8 print:hidden">
             <div className="w-full lg:w-auto">
                 <button onClick={onBack} className="flex items-center gap-2 text-gray-600 hover:text-white transition-colors text-[10px] font-bold uppercase tracking-[0.3em] mb-4">
                     <ChevronLeft size={14} /> Mission Control
@@ -102,9 +106,9 @@ const ModuleDataCore: React.FC<{onBack: () => void}> = ({ onBack }) => {
             </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row flex-1 gap-4 lg:gap-1 min-h-0 overflow-hidden">
+        <div className="flex flex-col lg:flex-row flex-1 gap-4 lg:gap-1 min-h-0 overflow-hidden print:overflow-visible print:block">
             {/* Sidebar List */}
-            <div className={`w-full lg:w-1/3 bg-[#050505] border border-white/[0.05] flex flex-col rounded-3xl lg:rounded-none lg:rounded-tl-3xl overflow-hidden ${activeDoc ? 'hidden lg:flex' : 'flex'}`}>
+            <div className={`w-full lg:w-1/3 bg-[#050505] border border-white/[0.05] flex flex-col rounded-3xl lg:rounded-none lg:rounded-tl-3xl overflow-hidden print:hidden ${activeDoc ? 'hidden lg:flex' : 'flex'}`}>
                 <div className="p-6 md:p-8 border-b border-white/[0.03] flex justify-between items-center bg-white/[0.01]">
                     <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest flex items-center gap-2">
                         <Terminal size={12} /> Asset Library
@@ -144,9 +148,9 @@ const ModuleDataCore: React.FC<{onBack: () => void}> = ({ onBack }) => {
             </div>
             
             {/* Document Viewer */}
-            <div className={`flex-1 bg-[#020202] border border-white/[0.05] relative overflow-hidden flex flex-col shadow-2xl rounded-3xl lg:rounded-none lg:rounded-tr-3xl ${!activeDoc ? 'hidden lg:flex' : 'flex'}`}>
+            <div className={`flex-1 bg-[#020202] border border-white/[0.05] relative overflow-hidden flex flex-col shadow-2xl rounded-3xl lg:rounded-none lg:rounded-tr-3xl print:shadow-none print:border-none print:bg-white print:text-black ${!activeDoc ? 'hidden lg:flex' : 'flex'}`}>
                 {isDecrypting ? (
-                    <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center p-6 md:p-10 animate-fade-in">
+                    <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center p-6 md:p-10 animate-fade-in print:hidden">
                         <div className="w-full max-w-xs h-1 bg-white/[0.03] mb-8 relative overflow-hidden rounded-full">
                             <div className="h-full bg-zinc-800 transition-all duration-300" style={{ width: `${decryptProgress}%` }}></div>
                         </div>
@@ -156,31 +160,31 @@ const ModuleDataCore: React.FC<{onBack: () => void}> = ({ onBack }) => {
                         </div>
                     </div>
                 ) : activeDoc ? (
-                    <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10">
-                        <div className="p-8 md:p-16 lg:p-24 max-w-4xl mx-auto">
-                            <div className="flex justify-between items-center mb-10 md:mb-16 opacity-50">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10 print:overflow-visible">
+                        <div className="p-8 md:p-16 lg:p-24 max-w-4xl mx-auto print:p-0">
+                            <div className="flex justify-between items-center mb-10 md:mb-16 print:mb-8 opacity-50 print:opacity-100">
                                 <div className="flex items-center gap-3">
-                                    <button onClick={() => setActiveDoc(null)} className="lg:hidden p-2 bg-white/5 rounded-full text-gray-400">
+                                    <button onClick={() => setActiveDoc(null)} className="lg:hidden p-2 bg-white/5 rounded-full text-gray-400 print:hidden">
                                         <ChevronLeft size={16} />
                                     </button>
-                                    <ShieldCheck size={18} className="text-zinc-400" />
-                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 hidden sm:inline">Validated Tactical Knowledge</span>
+                                    <ShieldCheck size={18} className="text-zinc-400 print:text-black" />
+                                    <span className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 print:text-black hidden sm:inline">Validated Tactical Knowledge // WINF™</span>
                                 </div>
-                                <div className="flex gap-2 md:gap-4">
-                                    <button className="p-2 md:p-3 bg-white/5 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"><Download size={18}/></button>
+                                <div className="flex gap-2 md:gap-4 print:hidden">
+                                    <button onClick={handleDownloadPDF} className="flex items-center gap-2 px-4 py-2 border border-white/5 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors text-[10px] font-bold uppercase tracking-widest"><Download size={14}/> Gerar PDF</button>
                                     <button className="p-2 md:p-3 bg-white/5 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors"><History size={18}/></button>
                                 </div>
                             </div>
                             
-                            <div className="prose prose-invert max-w-none">
+                            <div className="prose prose-invert max-w-none print:prose-p:text-gray-900 print:prose-headings:text-black print:prose-li:text-gray-900">
                                 {renderMarkdown(activeDoc.content)}
                             </div>
 
-                            <div className="mt-20 md:mt-32 pt-12 border-t border-white/5 text-center">
-                                <div className="inline-block p-4 md:p-6 border border-white/5 rounded-3xl mb-8">
-                                    <QrCode size={60} className="text-gray-800 md:w-20 md:h-20" />
+                            <div className="mt-20 md:mt-32 pt-12 border-t border-white/5 print:border-gray-200 text-center">
+                                <div className="inline-block p-4 md:p-6 border border-white/5 print:border-gray-200 rounded-3xl mb-8">
+                                    <QrCode size={60} className="text-gray-800 print:text-gray-900 md:w-20 md:h-20" />
                                 </div>
-                                <p className="text-[10px] text-gray-800 uppercase tracking-[0.6em]">Winf™ PARTNERS International // Node Santos-Alpha</p>
+                                <p className="text-[10px] text-gray-800 print:text-gray-900 uppercase tracking-[0.6em]">Winf™ PARTNERS International // Official Document</p>
                             </div>
                         </div>
                     </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { WINF_CONSTANTS } from '../constants';
-import { FileText, Download, Printer } from 'lucide-react';
+import { FileText, Download, Printer, Plus, ArrowRight, ShieldCheck, CheckCircle } from 'lucide-react';
 import { useWinf } from '../contexts/WinfContext';
 
 interface ArchitectSpecGeneratorProps {
@@ -57,49 +57,148 @@ const ArchitectSpecGenerator: React.FC<ArchitectSpecGeneratorProps> = ({ onSpecC
     .find(item => item.id === formData.filmId);
 
   return (
-    <div className="p-8 bg-winf-surface border border-winf-border rounded-[40px]">
-      <h2 className="text-3xl font-black uppercase tracking-tighter text-winf-text_primary mb-8">Gerador de Especificação Técnica</h2>
+    <div className="p-10 bg-[#080808] border border-white/10 rounded-[40px] shadow-2xl relative overflow-hidden group">
+      <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-white/10 transition-colors duration-1000"></div>
+      
+      <div className="flex items-center justify-between mb-10 px-2">
+        <h2 className="text-3xl font-black uppercase tracking-tighter text-white">WINF™ ARCH <span className="text-zinc-500 font-light">SPEC ENGINE</span></h2>
+        <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center border border-white/10">
+          <FileText size={20} className="text-zinc-500" />
+        </div>
+      </div>
       
       {!generated ? (
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="text-[9px] font-black uppercase tracking-[0.3em] text-winf-text_muted/60 ml-2">Nome do Projeto</label>
-            <input name="projectName" required onChange={handleInputChange} className="w-full bg-winf-background border border-winf-border rounded-xl px-6 py-4 text-sm text-winf-text_primary" placeholder="EX: RESIDÊNCIA ALTO PADRÃO" />
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 ml-1">Identificação do Projeto</label>
+            <input 
+              name="projectName" 
+              required 
+              onChange={handleInputChange} 
+              className="w-full bg-black border border-white/10 rounded-2xl px-6 py-5 text-sm text-white focus:border-white transition-all outline-none placeholder:text-zinc-800" 
+              placeholder="EX: RESIDÊNCIA ALTO PADRÃO" 
+            />
           </div>
-          <div className="space-y-2">
-            <label className="text-[9px] font-black uppercase tracking-[0.3em] text-winf-text_muted/60 ml-2">Nome do Cliente</label>
-            <input name="clientName" required onChange={handleInputChange} className="w-full bg-winf-background border border-winf-border rounded-xl px-6 py-4 text-sm text-winf-text_primary" placeholder="EX: FAMÍLIA SILVA" />
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 ml-1">Proprietário / Titular</label>
+            <input 
+              name="clientName" 
+              required 
+              onChange={handleInputChange} 
+              className="w-full bg-black border border-white/10 rounded-2xl px-6 py-5 text-sm text-white focus:border-white transition-all outline-none placeholder:text-zinc-800" 
+              placeholder="EX: FAMÍLIA SILVA" 
+            />
           </div>
-          <div className="space-y-2">
-            <label className="text-[9px] font-black uppercase tracking-[0.3em] text-winf-text_muted/60 ml-2">Película Selecionada</label>
-            <select name="filmId" value={formData.filmId} onChange={handleInputChange} className="w-full bg-winf-background border border-winf-border rounded-xl px-6 py-4 text-sm text-winf-text_primary">
-              {WINF_CONSTANTS.portfolio.lines.flatMap(line => line.items).map(item => (
-                <option key={item.id} value={item.id}>{item.name}</option>
-              ))}
-            </select>
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 ml-1">Filme de Alta Performance</label>
+            <div className="relative">
+              <select 
+                name="filmId" 
+                value={formData.filmId} 
+                onChange={handleInputChange} 
+                className="w-full bg-black border border-white/10 rounded-2xl px-6 py-5 text-sm text-white focus:border-white outline-none appearance-none cursor-pointer"
+              >
+                {WINF_CONSTANTS.portfolio.lines.flatMap(line => line.items).map(item => (
+                  <option key={item.id} value={item.id}>{item.name}</option>
+                ))}
+              </select>
+              <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none text-zinc-500">
+                <Plus size={16} />
+              </div>
+            </div>
           </div>
-          <div className="space-y-2">
-            <label className="text-[9px] font-black uppercase tracking-[0.3em] text-winf-text_muted/60 ml-2">Área Total (m²)</label>
-            <input name="area" type="number" required onChange={handleInputChange} className="w-full bg-winf-background border border-winf-border rounded-xl px-6 py-4 text-sm text-winf-text_primary" placeholder="EX: 150" />
+          <div className="space-y-3">
+            <label className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500 ml-1">Área de Cobertura (m²)</label>
+            <input 
+              name="area" 
+              type="number" 
+              required 
+              onChange={handleInputChange} 
+              className="w-full bg-black border border-white/10 rounded-2xl px-6 py-5 text-sm text-white focus:border-white transition-all outline-none placeholder:text-zinc-800 font-mono" 
+              placeholder="EX: 150" 
+            />
           </div>
-          <button type="submit" className="col-span-full mt-4 bg-winf-text_primary text-winf-background py-5 rounded-2xl font-black uppercase tracking-[0.3em] hover:bg-winf-text_primary/90 transition-all">
-            Gerar Especificação
+          <button 
+            type="submit" 
+            className="col-span-full mt-6 bg-white text-black py-6 rounded-2xl font-black uppercase tracking-[0.4em] hover:bg-zinc-200 transition-all shadow-[0_20px_60px_rgba(255,255,255,0.05)] active:scale-[0.98] flex items-center justify-center gap-3 group/btn"
+          >
+            Sincronizar Dossiê de Performance™ <ArrowRight size={18} className="group-hover/btn:translate-x-1 transition-transform" />
           </button>
         </form>
       ) : (
-        <div className="space-y-8">
-          <div className="p-8 bg-winf-background border border-winf-border rounded-2xl font-mono text-xs text-winf-text_primary space-y-4">
-            <h3 className="text-lg font-black uppercase tracking-widest border-b border-winf-border pb-4">Especificação Técnica WINF™</h3>
-            <p><strong>Projeto:</strong> {formData.projectName}</p>
-            <p><strong>Cliente:</strong> {formData.clientName}</p>
-            <p><strong>Película:</strong> {selectedFilm?.name}</p>
-            <p><strong>Área:</strong> {formData.area} m²</p>
-            <p><strong>Especificações:</strong> {selectedFilm?.specs?.join(', ')}</p>
-            <p className="pt-4 text-winf-text_muted">Documento gerado automaticamente pelo WINF™ Architect AI.</p>
+        <div className="space-y-10">
+          <div className="p-10 bg-[#050505] border border-white/10 rounded-[2.5rem] font-sans text-xs text-white space-y-8 relative overflow-hidden shadow-inner">
+            <div className="absolute top-0 right-0 p-6 opacity-5">
+              <ShieldCheck size={160} />
+            </div>
+            
+            <div className="flex items-start justify-between border-b border-white/10 pb-8">
+              <div className="space-y-1">
+                <h3 className="text-2xl font-black uppercase tracking-widest text-white leading-none">DOSSIÊ TÉCNICO</h3>
+                <p className="text-[10px] text-zinc-500 font-bold uppercase tracking-[0.3em]">WINF™ ARCHITECTURAL SPECIFICATION</p>
+              </div>
+              <div className="px-3 py-1 bg-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-zinc-400 border border-white/5">
+                Ref: #WAP-2026
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+               <div className="space-y-6">
+                 <div>
+                   <span className="text-zinc-600 uppercase text-[9px] font-black tracking-widest block mb-2">Projeto Especial</span>
+                   <p className="text-lg font-bold uppercase tracking-tight">{formData.projectName}</p>
+                 </div>
+                 <div>
+                   <span className="text-zinc-600 uppercase text-[9px] font-black tracking-widest block mb-2">Titular da Especificação</span>
+                   <p className="text-lg font-bold uppercase tracking-tight">{formData.clientName}</p>
+                 </div>
+               </div>
+               <div className="space-y-6">
+                 <div>
+                   <span className="text-zinc-600 uppercase text-[9px] font-black tracking-widest block mb-2">Engenharia Nano-Molecular</span>
+                   <p className="text-lg font-black uppercase tracking-tight text-white flex items-center gap-2">
+                     <CheckCircle size={18} className="text-zinc-500" /> {selectedFilm?.name}
+                   </p>
+                 </div>
+                 <div>
+                   <span className="text-zinc-600 uppercase text-[9px] font-black tracking-widest block mb-2">Cálculo de Cobertura</span>
+                   <p className="text-2xl font-mono font-black">{formData.area} <span className="text-xs text-zinc-500 font-sans">m²</span></p>
+                 </div>
+               </div>
+            </div>
+
+            <div className="pt-8 border-t border-white/10">
+              <span className="text-zinc-600 uppercase text-[9px] font-black tracking-widest block mb-3">Memória Descritiva de Performance:</span>
+              <div className="flex flex-wrap gap-2">
+                {selectedFilm?.specs?.map((spec, i) => (
+                  <span key={i} className="px-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+                    {spec}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-6 flex items-center justify-between">
+              <p className="text-[9px] text-zinc-700 font-bold uppercase tracking-[0.3em]">Gerado via WINF™ Neural Architecture System</p>
+              <div className="flex gap-1">
+                {[1,2,3].map(i => <div key={i} className="w-1 h-1 bg-zinc-800 rounded-full"></div>)}
+              </div>
+            </div>
           </div>
-          <div className="flex gap-4">
-            <button onClick={() => setGenerated(false)} className="flex-1 py-4 border border-winf-border rounded-xl text-winf-text_primary font-bold uppercase tracking-widest">Nova Especificação</button>
-            <button onClick={generatePDF} className="flex-1 py-4 bg-winf-primary text-winf-background rounded-xl font-bold uppercase tracking-widest flex items-center justify-center gap-2"><Download size={16}/> Baixar PDF</button>
+
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button 
+              onClick={() => setGenerated(false)} 
+              className="flex-1 py-5 border border-white/10 rounded-2xl text-zinc-400 font-black uppercase tracking-[0.2em] text-[10px] hover:bg-white/[0.02] hover:text-white transition-all active:scale-95"
+            >
+              Nova Especificação
+            </button>
+            <button 
+              onClick={generatePDF} 
+              className="flex-2 py-5 bg-white text-black rounded-2xl font-black uppercase tracking-[0.3em] text-[10px] flex items-center justify-center gap-3 hover:bg-zinc-200 transition-all active:scale-95 shadow-xl"
+            >
+              <Download size={16}/> Compilar Memorial PDF
+            </button>
           </div>
         </div>
       )}
